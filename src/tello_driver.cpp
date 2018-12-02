@@ -51,8 +51,6 @@ private:
     _socket.async_receive_from(asio::buffer(_data, _max_length), sender_endpoint,
       [this](std::error_code ec, std::size_t bytes_recvd)
       {
-        std::cout << "Heard something" << std::endl;
-
         if (!ec && bytes_recvd > 0)
         {
           _active = true;
@@ -62,8 +60,6 @@ private:
         // Receive again
         do_receive();
       });
-
-    std::cout << "do_receive called" << std::endl;
   }
 
 protected:
@@ -224,39 +220,27 @@ int main(int argc, char **argv)
   // Spin the socket service
   asio::io_service io_service;
   std::cout << "Spinning io_service" << std::endl;
-  std::thread thread1([&io_service, &r]()
-  {
-    while (rclcpp::ok())
-    {
-      // Handle some incoming data on the sockets
-      io_service.run();
-
-      // Wait
-      r.sleep();
-    }
-  });
+  asio::io_service::work work(io_service);
+  std::thread thread1([&io_service](){ io_service.run(); });
 
   // Spin the ROS node
   auto node = std::make_shared<tello_driver::TelloDriver>(io_service);
   std::cout << "Spinning TelloDriver" << std::endl;
-  std::thread thread2([node, &r]()
+  while (rclcpp::ok())
   {
-    while (rclcpp::ok())
-    {
-      // Do our work
-      node->spin_once();
+    // Do our work
+    node->spin_once();
 
-      // Respond to incoming ROS messages
-      rclcpp::spin_some(node);
+    // Respond to incoming ROS messages
+    rclcpp::spin_some(node);
 
-      // Wait
-      r.sleep();
-    }
-  });
+    // Wait
+    r.sleep();
+  }
 
-  // Join threads
+  // Join thread(s)
+  io_service.stop();  // Stop service
   thread1.join();
-  thread2.join();
 
   // Shut down ROS
   rclcpp::shutdown();

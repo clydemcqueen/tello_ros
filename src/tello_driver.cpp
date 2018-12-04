@@ -11,140 +11,54 @@ namespace tello_driver {
 constexpr int SPIN_RATE = 100;
 
 //=====================================================================================
-// An abstract class that receives data on a socket.
-// Override _handler to do something with the data.
-//=====================================================================================
-
-class Receiver
-{
-public:
-
-  Receiver(udp::socket &socket) : _socket(socket)
-  {
-    std::string address = socket.local_endpoint().address().to_string();
-    unsigned short port = socket.local_endpoint().port();
-    std::cout << "Listening on " << address << ":" << port << std::endl;
-
-    // Start receiving
-    do_receive();
-  }
-
-  ~Receiver()
-  {
-    // Stop receiving
-    _socket.cancel();
-  }
-
-  // Have we received anything yet?
-  bool is_active()
-  {
-    return _active;
-  }
-
-private:
-
-  void do_receive()
-  {
-    udp::endpoint sender_endpoint;
-
-    // Async call returns immediately
-    _socket.async_receive_from(asio::buffer(_data, _max_length), sender_endpoint,
-      [this](std::error_code ec, std::size_t bytes_recvd)
-      {
-        if (!ec && bytes_recvd > 0)
-        {
-          _active = true;
-          _handler(ec, bytes_recvd);
-        }
-
-        // Receive again
-        do_receive();
-      });
-  }
-
-protected:
-
-  virtual void _handler(std::error_code ec, std::size_t bytes_recvd) = 0;
-
-  udp::socket &_socket;
-  bool _active = false;
-  static const size_t _max_length = 1024;
-  char _data[_max_length];
-};
-
-//=====================================================================================
-// Tello driver class.
-// Implements the Tello SDK v1.3.
+// Tello driver
+// Implements Tello SDK v1.3
 //=====================================================================================
 
 class TelloDriver : public rclcpp::Node
 {
-  class CommandReceiver : public Receiver
-  {
-    // Responses to commands, often just 'ok' or 'error'
-    void _handler(std::error_code ec, std::size_t bytes_recvd) override
-    {
-      std::cout << "Command response" << std::endl;
-    }
-
-  public:
-
-    CommandReceiver(udp::socket &socket) : Receiver(socket) {}
-  };
-
-  class StateReceiver : public Receiver
-  {
-    // Drone state information
-    void _handler(std::error_code ec, std::size_t bytes_recvd) override
-    {
-      std::cout << "State response" << std::endl;
-    }
-
-  public:
-
-    StateReceiver(udp::socket &socket) : Receiver(socket) {}
-  };
-
-  class VideoReceiver : public Receiver
-  {
-    // H264-encoded video packets
-    void _handler(std::error_code ec, std::size_t bytes_recvd) override
-    {
-      std::cout << "Video response" << std::endl;
-
-      // TODO get frame(s) from h264
-      // TODO for each frame, convert to ROS image
-      // TODO publish
-    }
-
-  public:
-
-    VideoReceiver(udp::socket &socket) : Receiver(socket) {}
-  };
-
 public:
 
-  explicit TelloDriver(asio::io_service &io_service) : Node("tello_driver"),
-    _command_remote_endpoint(udp::v4() /*_drone_ip*/, 8889),
-    _command_socket(io_service, udp::endpoint(udp::v4(), 0)),
-    _state_socket(io_service, udp::endpoint(udp::v4(), 8890)),
-    _video_socket(io_service, udp::endpoint(udp::v4(), 11111)),
-    _command_receiver(_command_socket),
-    _state_receiver(_state_socket),
-    _video_receiver(_video_socket)
+  explicit TelloDriver() : Node("tello_driver")
   {
     // TODO set up publishers
-
     // TODO set up subscribers
+
+    // Listen for state packets from the drone
+    state_thread_ = std::thread(
+      [this]()
+      {
+        for (;;)
+        {
+          size_t r = state_socket_.receive(asio::buffer(state_buffer_, max_length_));
+          mtx_.lock();
+          process_state(r);
+          mtx_.unlock();
+        }
+      });
+
+    // Listen for video packets from the drone
+    video_thread_ = std::thread(
+      [this]()
+      {
+        for (;;)
+        {
+          size_t r = video_socket_.receive(asio::buffer(video_buffer_, max_length_));
+          mtx_.lock();
+          process_video(r);
+          mtx_.unlock();
+        }
+      });
   }
 
   ~TelloDriver()
   {
-    // TODO not sure about the sequence -- will stuff get closed correctly?
   };
 
   void spin_once()
   {
+    mtx_.lock();
+
     static unsigned int counter = 0;
     counter++;
 
@@ -157,6 +71,8 @@ public:
     {
       spin_5s();
     }
+
+    mtx_.unlock();
   }
 
 private:
@@ -164,45 +80,80 @@ private:
   // Do work every 1s
   void spin_1s()
   {
-    if (!_command_receiver.is_active())
+    if (!connected_)
     {
-      std::cout << "Initialize SDK" << std::endl;
-      _command_socket.send_to(asio::buffer(std::string("command")), _command_remote_endpoint);
+      // Activate the SDK, and start sending state packets
+      std::cout << "Activating SDK" << std::endl;
+      command_socket_.send_to(asio::buffer(std::string("command")), command_remote_endpoint_);
     }
 
-    if (_command_receiver.is_active() && !_video_receiver.is_active())
+    if (connected_ && !streaming_)
     {
-      std::cout << "Stream video" << std::endl;
-      _command_socket.send_to(asio::buffer(std::string("streamon")), _command_remote_endpoint);
+      // Start video
+      std::cout << "Activating video" << std::endl;
+      command_socket_.send_to(asio::buffer(std::string("streamon")), command_remote_endpoint_);
     }
   }
 
   // Do work every 5s
   void spin_5s()
   {
-    if (_command_receiver.is_active())
+    if (connected_ && streaming_)
     {
-      // Drone will land if there's no communication for 15s
-      std::cout << "Keep flying" << std::endl;
-      _command_socket.send_to(asio::buffer(std::string("command")), _command_remote_endpoint);
+      // The drone will auto-land if it hears nothing for 15s
+      std::cout << "Keep alive" << std::endl;
+      command_socket_.send_to(asio::buffer(std::string("command")), command_remote_endpoint_);
     }
   }
 
-  // Drone IP address
-  asio::ip::address_v4 _drone_ip = asio::ip::address_v4::from_string("192.168.10.1");
+  // Process a state packet from the drone
+  void process_state(size_t r)
+  {
+    if (!connected_)
+    {
+      std::cout << "Receiving state! " << r << std::endl;
+      connected_ = true;
+    }
+  }
 
-  // Drone command endpoint
-  udp::endpoint _command_remote_endpoint;
+  // Process a video packet from the drone
+  void process_video(size_t r)
+  {
+    if (!streaming_)
+    {
+      std::cout << "Receiving video! " << r << std::endl;
+      streaming_ = true;
+    }
+  }
 
-  // Sockets
-  udp::socket _command_socket;
-  udp::socket _state_socket;
-  udp::socket _video_socket;
+  // Asio setup
+  asio::io_service io_service_;
+  asio::ip::address_v4 drone_ip_ = asio::ip::address_v4::from_string("192.168.10.1");
+  udp::endpoint command_local_endpoint_{udp::v4(), 0};
+#ifdef LOCAL_EMULATION
+  udp::endpoint command_remote_endpoint_{udp::v4(), 8889};
+#else
+  udp::endpoint command_remote_endpoint_{drone_ip_, 8889};
+#endif
+  udp::endpoint state_local_endpoint_{udp::v4(), 8890};
+  udp::endpoint video_local_endpoint_{udp::v4(), 11111};
+  udp::socket command_socket_{io_service_, command_local_endpoint_};
+  udp::socket state_socket_{io_service_, state_local_endpoint_};
+  udp::socket video_socket_{io_service_, video_local_endpoint_};
 
-  // Receivers
-  CommandReceiver _command_receiver;
-  StateReceiver _state_receiver;
-  VideoReceiver _video_receiver;
+  // Buffers
+  static const size_t max_length_ = 1024;
+  char state_buffer_[max_length_];
+  char video_buffer_[max_length_];
+
+  // Threads
+  std::mutex mtx_;  // Used to protect all members, std::cout, etc.
+  std::thread state_thread_;
+  std::thread video_thread_;
+
+  // State
+  bool connected_ = false;
+  bool streaming_ = false;
 };
 
 } // namespace tello_driver
@@ -213,19 +164,10 @@ int main(int argc, char **argv)
   // Force flush of the stdout buffer
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  // Init ROS
   rclcpp::init(argc, argv);
   rclcpp::Rate r(tello_driver::SPIN_RATE);
+  auto node = std::make_shared<tello_driver::TelloDriver>();
 
-  // Spin the socket service
-  asio::io_service io_service;
-  std::cout << "Spinning io_service" << std::endl;
-  asio::io_service::work work(io_service);
-  std::thread thread1([&io_service](){ io_service.run(); });
-
-  // Spin the ROS node
-  auto node = std::make_shared<tello_driver::TelloDriver>(io_service);
-  std::cout << "Spinning TelloDriver" << std::endl;
   while (rclcpp::ok())
   {
     // Do our work
@@ -237,10 +179,6 @@ int main(int argc, char **argv)
     // Wait
     r.sleep();
   }
-
-  // Join thread(s)
-  io_service.stop();  // Stop service
-  thread1.join();
 
   // Shut down ROS
   rclcpp::shutdown();

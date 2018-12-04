@@ -42,24 +42,4 @@ target_compile_definitions(tello_emulator
   PRIVATE ASIO_STANDALONE
   PRIVATE ASIO_HAS_STD_CHRONO)
 
-# Test: UDP client TODO remove this
-add_executable(echo_client src/blocking_udp_echo_client.cpp)
-
-ament_target_dependencies(echo_client)
-
-target_compile_definitions(echo_client
-  PRIVATE ASIO_ENABLE_HANDLER_TRACKING
-  PRIVATE ASIO_STANDALONE
-  PRIVATE ASIO_HAS_STD_CHRONO)
-
-# Test: UDP server TODO remove this
-add_executable(echo_server src/blocking_udp_echo_server.cpp)
-
-ament_target_dependencies(echo_server)
-
-target_compile_definitions(echo_server
-  PRIVATE ASIO_ENABLE_HANDLER_TRACKING
-  PRIVATE ASIO_STANDALONE
-  PRIVATE ASIO_HAS_STD_CHRONO)
-
 ament_package()

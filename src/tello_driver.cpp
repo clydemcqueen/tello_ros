@@ -80,6 +80,18 @@ private:
   // Do work every 1s
   void spin_1s()
   {
+    if (connected_ && now() - last_state_time_ > rclcpp::Duration(5, 0))
+    {
+      std::cout << "No state received for 5s" << std::endl;
+      connected_ = false;
+    }
+
+    if (streaming_ && now() - last_video_time_ > rclcpp::Duration(5, 0))
+    {
+      std::cout << "No video received for 5s" << std::endl;
+      streaming_ = false;
+    }
+
     if (!connected_)
     {
       // Activate the SDK, and start sending state packets
@@ -109,6 +121,8 @@ private:
   // Process a state packet from the drone
   void process_state(size_t r)
   {
+    last_state_time_ = now();
+
     if (!connected_)
     {
       std::cout << "Receiving state! " << r << std::endl;
@@ -119,6 +133,8 @@ private:
   // Process a video packet from the drone
   void process_video(size_t r)
   {
+    last_video_time_ = now();
+
     if (!streaming_)
     {
       std::cout << "Receiving video! " << r << std::endl;
@@ -130,6 +146,7 @@ private:
   asio::io_service io_service_;
   asio::ip::address_v4 drone_ip_ = asio::ip::address_v4::from_string("192.168.10.1");
   udp::endpoint command_local_endpoint_{udp::v4(), 0};
+#undef LOCAL_EMULATION
 #ifdef LOCAL_EMULATION
   udp::endpoint command_remote_endpoint_{udp::v4(), 8889};
 #else
@@ -154,6 +171,8 @@ private:
   // State
   bool connected_ = false;
   bool streaming_ = false;
+  rclcpp::Time last_state_time_;
+  rclcpp::Time last_video_time_;
 };
 
 } // namespace tello_driver

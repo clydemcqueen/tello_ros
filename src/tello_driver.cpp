@@ -1,9 +1,24 @@
 #include <iostream>
 #include <asio.hpp>
+#include <libavutil/frame.h>
+#include <opencv2/highgui.hpp>
 
 #include "rclcpp/rclcpp.hpp"
+#include "cv_bridge/cv_bridge.h"
+#include "sensor_msgs/image_encodings.hpp"
+
+#include "h264decoder.hpp"
 
 using asio::ip::udp;
+
+// Notes on Tello video:
+// -- frames are always 960x720.
+// -- frames are split into UDP packets of length 1460.
+// -- normal frames are ~10k, or about 8 UDP packets.
+// -- keyframes are ~35k, or about 25 UDP packets.
+// -- keyframes are always preceded by an 8-byte UDP packet and a 13-byte UDP packet -- markers?
+// -- the h264 parser will consume the 8-byte packet, the 13-byte packet and the entire keyframe without
+//    generating a frame. Presumably the keyframe is stored in the parser and referenced later.
 
 namespace tello_driver {
 
@@ -21,8 +36,8 @@ public:
 
   explicit TelloDriver() : Node("tello_driver")
   {
-    // TODO set up publishers
-    // TODO set up subscribers
+    // Publisher(s)
+    image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", 1);
 
     // Listen for state packets from the drone
     state_thread_ = std::thread(
@@ -30,7 +45,7 @@ public:
       {
         for (;;)
         {
-          size_t r = state_socket_.receive(asio::buffer(state_buffer_, max_length_));
+          size_t r = state_socket_.receive(asio::buffer(state_buffer_));
           mtx_.lock();
           process_state(r);
           mtx_.unlock();
@@ -43,7 +58,7 @@ public:
       {
         for (;;)
         {
-          size_t r = video_socket_.receive(asio::buffer(video_buffer_, max_length_));
+          size_t r = video_socket_.receive(asio::buffer(video_buffer_));
           mtx_.lock();
           process_video(r);
           mtx_.unlock();
@@ -137,8 +152,81 @@ private:
 
     if (!streaming_)
     {
+      // First packet
       std::cout << "Receiving video! " << r << std::endl;
       streaming_ = true;
+      seq_buffer_next_ = 0;
+      seq_buffer_num_packets_ = 0;
+    }
+
+    if (seq_buffer_next_ + r >= seq_buffer_.size())
+    {
+      std::cout << "ERROR! Video buffer overflow, dropping sequence" << std::endl;
+      seq_buffer_next_ = 0;
+      seq_buffer_num_packets_ = 0;
+      return;
+    }
+
+    std::copy(video_buffer_.begin(), video_buffer_.begin() + r, seq_buffer_.begin() + seq_buffer_next_);
+    seq_buffer_next_ += r;
+    seq_buffer_num_packets_++;
+
+    // If the packet is < 1460 bytes then it's the last packet in the sequence
+    if (r < 1460)
+    {
+      decode_frames();
+
+      seq_buffer_next_ = 0;
+      seq_buffer_num_packets_ = 0;
+    }
+  }
+
+  // Decode frames
+  void decode_frames()
+  {
+    size_t next = 0;
+
+    try
+    {
+      while (next < seq_buffer_next_)
+      {
+        // Parse h264
+        ssize_t consumed = decoder_.parse((unsigned char*)seq_buffer_.begin() + next, seq_buffer_next_ - next);
+
+        // Is a frame available?
+        if (decoder_.is_frame_available())
+        {
+          // Decode the frame
+          const AVFrame& frame = decoder_.decode_frame();
+
+          // Convert pixels from YUV420P to BGR24
+          int size = converter_.predict_size(frame.width, frame.height);
+          unsigned char bgr24[size];
+          converter_.convert(frame, bgr24);
+
+          // Convert to cv::Mat
+          cv::Mat mat{frame.height, frame.width, CV_8UC3, bgr24};
+
+          // Display
+          // TODO make this conditional
+          cv::imshow("frame", mat);
+          cv::waitKey(1);
+
+          // Publish a ROS message
+          // TODO only publish if somebody is subscribing
+          std_msgs::msg::Header header{};
+          header.frame_id = "camera_frame";
+          header.stamp = now();
+          cv_bridge::CvImage image{header, sensor_msgs::image_encodings::BGR8, mat};
+          image_pub_->publish(image.toImageMsg());
+        }
+
+        next += consumed;
+      }
+    }
+    catch (std::runtime_error e)
+    {
+      std::cout << e.what() << std::endl;
     }
   }
 
@@ -158,10 +246,16 @@ private:
   udp::socket state_socket_{io_service_, state_local_endpoint_};
   udp::socket video_socket_{io_service_, video_local_endpoint_};
 
-  // Buffers
-  static const size_t max_length_ = 1024;
-  char state_buffer_[max_length_];
-  char video_buffer_[max_length_];
+  // State buffer holds 1 state packet
+  std::array<char, 1024>state_buffer_;
+
+  // Video buffer holds 1 video packet
+  std::array<unsigned char, 1024*2>video_buffer_;
+
+  // Sequence buffer holds N video packets
+  std::array<unsigned char, 1024*64>seq_buffer_;
+  size_t  seq_buffer_next_ = 0;
+  int seq_buffer_num_packets_ = 0;
 
   // Threads
   std::mutex mtx_;  // Used to protect all members, std::cout, etc.
@@ -173,6 +267,13 @@ private:
   bool streaming_ = false;
   rclcpp::Time last_state_time_;
   rclcpp::Time last_video_time_;
+
+  // Decoder
+  H264Decoder decoder_;
+  ConverterRGB24 converter_;
+
+  // Publishers
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
 };
 
 } // namespace tello_driver

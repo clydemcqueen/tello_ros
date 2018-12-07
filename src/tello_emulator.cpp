@@ -15,14 +15,13 @@ void emulator()
 {
   asio::io_service io_service;
 
-  const size_t max_length = 1024;
-  char data[max_length];
+  std::array<char, 1024>buffer;
 
   udp::socket command_socket(io_service, udp::endpoint(udp::v4(), 8889));
 
   udp::endpoint state_remote_endpoint{udp::v4(), 8890};
   udp::endpoint video_remote_endpoint{udp::v4(), 11111};
-  
+
   udp::socket state_socket{io_service, udp::endpoint(udp::v4(), 0)};
   udp::socket video_socket{io_service, udp::endpoint(udp::v4(), 0)};
 
@@ -31,27 +30,27 @@ void emulator()
 
   bool connected = false;
   bool streaming = false;
-  
+
   for (;;)
   {
     // Wait for a message from the controller
     udp::endpoint sender_endpoint;
-    size_t length = command_socket.receive_from(asio::buffer(data, max_length), sender_endpoint);
-    
+    size_t length = command_socket.receive_from(asio::buffer(buffer), sender_endpoint);
+
     std::string address = sender_endpoint.address().to_string();
     unsigned short port = sender_endpoint.port();
 
-    std::string str(data, length);
-    std::cout << "Drone heard '" << str << "' from " << address << ":" << port << std::endl;
+    std::string command(std::begin(buffer), std::begin(buffer) + length);
+    std::cout << "Drone heard '" << command << "' from " << address << ":" << port << std::endl;
 
     // Respond with an "ok"
     command_socket.send_to(asio::buffer(std::string("ok")), sender_endpoint);
 
-    // If we heard "command", then start sending state messages
-    if (!connected && std::string(data, length) == "command")
+    // If we heard "command" then start sending state messages
+    if (!connected && command == "command")
     {
       connected = true;
-      
+
       state_thread = std::thread(
         [&state_socket, &state_remote_endpoint]()
         {
@@ -64,10 +63,10 @@ void emulator()
     }
 
     // If we heard "streamon" then start sending video messages
-    if (!streaming && std::string(data, length) == "streamon")
+    if (!streaming && command == "streamon")
     {
       streaming = true;
-      
+
       video_thread = std::thread(
         [&video_socket, &video_remote_endpoint]()
         {

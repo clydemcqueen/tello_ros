@@ -9,10 +9,11 @@
   <maintainer email="clyde@mcqueen.net">Clyde McQueen</maintainer>
   <license>BSD</license>
 
-  <url type="repository">TODO</url>
-  <url type="bugtracker">TODO</url>
+  <url type="repository">https://github.com/clydemcqueen/tello_driver.git</url>
+  <url type="bugtracker">https://github.com/clydemcqueen/tello_driver/issues</url>
 
   <author>Clyde McQueen</author>
+  <author>Peter Mullen</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

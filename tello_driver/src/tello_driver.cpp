@@ -5,7 +5,11 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "cv_bridge/cv_bridge.h"
+#include "geometry_msgs/msg/twist.hpp"
 #include "sensor_msgs/image_encodings.hpp"
+#include "std_msgs/msg/empty.hpp"
+#include "tello_msgs/msg/flight_data.hpp"
+#include "tello_msgs/msg/flip.hpp"
 
 #include "h264decoder.hpp"
 
@@ -36,8 +40,16 @@ public:
 
   explicit TelloDriver() : Node("tello_driver")
   {
-    // Publisher(s)
+    // ROS publishers
     image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", 1);
+    flight_data_pub_ = create_publisher<tello_msgs::msg::FlightData>("flight_data", 1);
+
+    // ROS subscriptions
+    using std::placeholders::_1;
+    takeoff_sub_ = create_subscription<std_msgs::msg::Empty>("takeoff", std::bind(&TelloDriver::takeoff_callback, this, _1));
+    land_sub_ = create_subscription<std_msgs::msg::Empty>("land", std::bind(&TelloDriver::land_callback, this, _1));
+    flip_sub_ = create_subscription<tello_msgs::msg::Flip>("flip", std::bind(&TelloDriver::flip_callback, this, _1));
+    cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>("cmd_vel", std::bind(&TelloDriver::cmd_vel_callback, this, _1));
 
     // Listen for state packets from the drone
     state_thread_ = std::thread(
@@ -69,6 +81,22 @@ public:
   ~TelloDriver()
   {
   };
+
+  void takeoff_callback(const std_msgs::msg::Empty::SharedPtr msg)
+  {
+  }
+
+  void land_callback(const std_msgs::msg::Empty::SharedPtr msg)
+  {
+  }
+
+  void flip_callback(const tello_msgs::msg::Flip::SharedPtr msg)
+  {
+  }
+
+  void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+  {
+  }
 
   void spin_once()
   {
@@ -272,8 +300,15 @@ private:
   H264Decoder decoder_;
   ConverterRGB24 converter_;
 
-  // Publishers
+  // ROS publishers
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
+  rclcpp::Publisher<tello_msgs::msg::FlightData>::SharedPtr flight_data_pub_;
+
+  // ROS subscriptions
+  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr takeoff_sub_;
+  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr land_sub_;
+  rclcpp::Subscription<tello_msgs::msg::Flip>::SharedPtr flip_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
 };
 
 } // namespace tello_driver

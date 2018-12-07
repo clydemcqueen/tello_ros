@@ -20,7 +20,9 @@
   <depend>cv_bridge</depend>
   <depend>OpenCV</depend>
   <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>tello_msgs</depend>
 
   <export>

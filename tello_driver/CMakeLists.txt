@@ -15,6 +15,11 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
+# Emulate colcon by providing paths to other projects in the workspace
+if($ENV{CLION_IDE})
+  set(tello_msgs_DIR "${PROJECT_SOURCE_DIR}/../../../install/tello_msgs/share/tello_msgs/cmake")
+endif()
+
 # Asio requires threading
 set(CMAKE_CXX_FLAGS "-pthread")
 
@@ -24,9 +29,10 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(tello_msgs REQUIRED)
 
 # Local includes
-include_directories(h264decoder)
+include_directories(h264decoder ${tello_msgs_INCLUDE_DIRS})
 
 # h264decoder uses deprecated ffmpeg calls, turn off the warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")

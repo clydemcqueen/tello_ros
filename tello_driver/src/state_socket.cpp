@@ -1,6 +1,7 @@
 #include "tello_driver.hpp"
 
 #include <iostream>
+#include <regex>
 
 namespace tello_driver {
 
@@ -30,8 +31,9 @@ void StateSocket::process_packet(size_t r)
 
   if (!receiving_)
   {
+    bool v2 = (r > 0) && buffer_[0] == 'm';
     driver_->lock();
-    std::cout << "Receiving state! " << r << std::endl;
+    std::cout << "Receiving state! SDK " << (v2 ? "v2.0" : "v1.3") << std::endl;
     driver_->unlock();
     receiving_ = true;
   }

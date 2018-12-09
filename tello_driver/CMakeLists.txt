@@ -35,6 +35,7 @@ find_package(tello_msgs REQUIRED)
 
 # Local includes
 include_directories(
+  include
   h264decoder
   ${geometry_msgs_INCLUDE_DIRS}
   ${sensor_msgs_INCLUDE_DIRS}
@@ -48,7 +49,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 # Tello driver node
 #=============
 
-add_executable(tello_driver src/tello_driver.cpp h264decoder/h264decoder.cpp)
+add_executable(tello_driver
+  src/tello_driver.cpp
+  src/command_socket.cpp
+  src/state_socket.cpp
+  src/video_socket.cpp
+  h264decoder/h264decoder.cpp)
 
 ament_target_dependencies(tello_driver
   cv_bridge

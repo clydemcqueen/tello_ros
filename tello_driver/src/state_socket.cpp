@@ -30,9 +30,7 @@ void StateSocket::process_packet(size_t r)
 
   if (!receiving_) {
     bool v2 = (r > 0) && buffer_[0] == 'm';
-    driver_->lock();
-    std::cout << "Receiving state! SDK " << (v2 ? "v2.0" : "v1.3") << std::endl;
-    driver_->unlock();
+    RCLCPP_INFO(driver_->get_logger(), "Receiving state, SDK %s", (v2 ? "v2.0" : "v1.3"));
     receiving_ = true;
   }
 

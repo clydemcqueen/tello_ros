@@ -34,9 +34,7 @@ void CommandSocket::process_packet(size_t r)
   last_time_ = driver_->now();
 
   if (!receiving_) {
-    driver_->lock();
-    std::cout << "Receiving command responses! " << r << std::endl;
-    driver_->unlock();
+    RCLCPP_INFO(driver_->get_logger(), "Receiving command responses");
     receiving_ = true;
   }
 }

@@ -38,18 +38,14 @@ void VideoSocket::process_packet(size_t r)
 
   if (!receiving_) {
     // First packet
-    driver_->lock();
-    std::cout << "Receiving video! " << r << std::endl;
-    driver_->unlock();
+    RCLCPP_INFO(driver_->get_logger(), "Receiving video");
     receiving_ = true;
     seq_buffer_next_ = 0;
     seq_buffer_num_packets_ = 0;
   }
 
   if (seq_buffer_next_ + r >= seq_buffer_.size()) {
-    driver_->lock();
-    std::cout << "ERROR! Video buffer overflow, dropping sequence" << std::endl;
-    driver_->unlock();
+    RCLCPP_ERROR(driver_->get_logger(), "Video buffer overflow, dropping sequence");
     seq_buffer_next_ = 0;
     seq_buffer_num_packets_ = 0;
     return;
@@ -113,9 +109,7 @@ void VideoSocket::decode_frames()
   }
   catch (std::runtime_error e)
   {
-    driver_->lock();
-    std::cout << e.what() << std::endl;
-    driver_->unlock();
+    RCLCPP_ERROR(driver_->get_logger(), e.what());
   }
 }
 

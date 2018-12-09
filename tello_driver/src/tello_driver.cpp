@@ -79,22 +79,24 @@ void TelloDriver::spin_once()
 void TelloDriver::spin_1s()
 {
   if (state_socket_->receiving() && now() - state_socket_->last_time() > rclcpp::Duration(5, 0)) {
-    std::cout << "No state received for 5s" << std::endl;
+    RCLCPP_ERROR(get_logger(), "No state received for 5s");
     state_socket_->reset();
   }
 
   if (video_socket_->receiving() && now() - video_socket_->last_time() > rclcpp::Duration(5, 0)) {
-    std::cout << "No video received for 5s" << std::endl;
+    RCLCPP_ERROR(get_logger(), "No video received for 5s");
     video_socket_->reset();
   }
 
   if (!state_socket_->receiving()) {
     // First command to the drone must be "command"
+    RCLCPP_INFO(get_logger(), "Starting SDK...");
     command_socket_->send_command("command");
   }
 
   if (state_socket_->receiving() && !video_socket_->receiving()) {
     // Start video
+    RCLCPP_INFO(get_logger(), "Starting video...");
     command_socket_->send_command("streamon");
   }
 }

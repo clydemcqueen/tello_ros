@@ -78,26 +78,22 @@ void TelloDriver::spin_once()
 // Do work every 1 second
 void TelloDriver::spin_1s()
 {
-  if (state_socket_->receiving() && now() - state_socket_->last_time() > rclcpp::Duration(5, 0))
-  {
+  if (state_socket_->receiving() && now() - state_socket_->last_time() > rclcpp::Duration(5, 0)) {
     std::cout << "No state received for 5s" << std::endl;
     state_socket_->reset();
   }
 
-  if (video_socket_->receiving() && now() - video_socket_->last_time() > rclcpp::Duration(5, 0))
-  {
+  if (video_socket_->receiving() && now() - video_socket_->last_time() > rclcpp::Duration(5, 0)) {
     std::cout << "No video received for 5s" << std::endl;
     video_socket_->reset();
   }
 
-  if (!state_socket_->receiving())
-  {
+  if (!state_socket_->receiving()) {
     // First command to the drone must be "command"
     command_socket_->send_command("command");
   }
 
-  if (state_socket_->receiving() && !video_socket_->receiving())
-  {
+  if (state_socket_->receiving() && !video_socket_->receiving()) {
     // Start video
     command_socket_->send_command("streamon");
   }
@@ -106,8 +102,7 @@ void TelloDriver::spin_1s()
 // Do work every 5 seconds
 void TelloDriver::spin_5s()
 {
-  if (state_socket_->receiving() && video_socket_->receiving())
-  {
+  if (state_socket_->receiving() && video_socket_->receiving()) {
     // The drone will auto-land if it hears nothing for 15s
     command_socket_->send_command("command");
   }
@@ -125,8 +120,7 @@ int main(int argc, char **argv)
   rclcpp::Rate r(tello_driver::SPIN_RATE);
   auto node = std::make_shared<tello_driver::TelloDriver>();
 
-  while (rclcpp::ok())
-  {
+  while (rclcpp::ok()) {
     // Do our work
     node->spin_once();
 

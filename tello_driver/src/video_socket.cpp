@@ -24,8 +24,7 @@ VideoSocket::VideoSocket(TelloDriver *driver) : TelloSocket(driver, 11111)
   thread_ = std::thread(
     [this]()
     {
-      for (;;)
-      {
+      for (;;) {
         size_t r = socket_.receive(asio::buffer(buffer_));
         process_packet(r);
       }
@@ -37,8 +36,7 @@ void VideoSocket::process_packet(size_t r)
 {
   last_time_ = driver_->now();
 
-  if (!receiving_)
-  {
+  if (!receiving_) {
     // First packet
     driver_->lock();
     std::cout << "Receiving video! " << r << std::endl;
@@ -48,8 +46,7 @@ void VideoSocket::process_packet(size_t r)
     seq_buffer_num_packets_ = 0;
   }
 
-  if (seq_buffer_next_ + r >= seq_buffer_.size())
-  {
+  if (seq_buffer_next_ + r >= seq_buffer_.size()) {
     driver_->lock();
     std::cout << "ERROR! Video buffer overflow, dropping sequence" << std::endl;
     driver_->unlock();
@@ -63,8 +60,7 @@ void VideoSocket::process_packet(size_t r)
   seq_buffer_num_packets_++;
 
   // If the packet is < 1460 bytes then it's the last packet in the sequence
-  if (r < 1460)
-  {
+  if (r < 1460) {
     decode_frames();
 
     seq_buffer_next_ = 0;
@@ -79,14 +75,12 @@ void VideoSocket::decode_frames()
 
   try
   {
-    while (next < seq_buffer_next_)
-    {
+    while (next < seq_buffer_next_) {
       // Parse h264
       ssize_t consumed = decoder_.parse(seq_buffer_.data() + next, seq_buffer_next_ - next);
 
       // Is a frame available?
-      if (decoder_.is_frame_available())
-      {
+      if (decoder_.is_frame_available()) {
         // Decode the frame
         const AVFrame &frame = decoder_.decode_frame();
 
@@ -104,8 +98,7 @@ void VideoSocket::decode_frames()
 
         // Publish a ROS message
         driver_->lock();
-        if (driver_->count_subscribers(driver_->image_pub_->get_topic_name()) > 0)
-        {
+        if (driver_->count_subscribers(driver_->image_pub_->get_topic_name()) > 0) {
           std_msgs::msg::Header header{};
           header.frame_id = "camera_frame";
           header.stamp = driver_->now();

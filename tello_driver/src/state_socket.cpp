@@ -16,8 +16,7 @@ StateSocket::StateSocket(TelloDriver *driver) : TelloSocket(driver, 8890)
   thread_ = std::thread(
     [this]()
     {
-      for (;;)
-      {
+      for (;;) {
         size_t r = socket_.receive(asio::buffer(buffer_));
         process_packet(r);
       }
@@ -29,8 +28,7 @@ void StateSocket::process_packet(size_t r)
 {
   last_time_ = driver_->now();
 
-  if (!receiving_)
-  {
+  if (!receiving_) {
     bool v2 = (r > 0) && buffer_[0] == 'm';
     driver_->lock();
     std::cout << "Receiving state! SDK " << (v2 ? "v2.0" : "v1.3") << std::endl;

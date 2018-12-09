@@ -36,22 +36,32 @@ TelloDriver::~TelloDriver()
 
 void TelloDriver::takeoff_callback(const std_msgs::msg::Empty::SharedPtr msg)
 {
-  // TODO
+  command_socket_->send_command("takeoff");
 }
 
 void TelloDriver::land_callback(const std_msgs::msg::Empty::SharedPtr msg)
 {
-  // TODO
+  command_socket_->send_command("land");
 }
 
 void TelloDriver::flip_callback(const tello_msgs::msg::Flip::SharedPtr msg)
 {
-  // TODO
+  static std::map<uint8_t, std::string> direction{
+    {tello_msgs::msg::Flip::FLIP_LEFT, "l"},
+    {tello_msgs::msg::Flip::FLIP_RIGHT, "r"},
+    {tello_msgs::msg::Flip::FLIP_FORWARD, "f"},
+    {tello_msgs::msg::Flip::FLIP_BACK, "b"}};
+
+  std::stringstream ss;
+  ss << "flip " << direction[msg->flip_command];
+  command_socket_->send_command(ss.str());
 }
 
 void TelloDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
-  // TODO
+  std::stringstream ss;
+  ss << "rc " << msg->linear.y << " " << msg->linear.x << " " << msg->linear.z << " " << msg->angular.z;
+  command_socket_->send_command(ss.str());
 }
 
 // Do work at SPIN_RATE Hz

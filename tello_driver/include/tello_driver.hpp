@@ -4,6 +4,7 @@
 #include "cv_bridge/cv_bridge.h"
 #include "geometry_msgs/msg/twist.hpp"
 #include "std_msgs/msg/empty.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "tello_msgs/msg/flight_data.hpp"
 #include "tello_msgs/msg/flip.hpp"
 
@@ -14,10 +15,15 @@ using asio::ip::udp;
 namespace tello_driver {
 
 class CommandSocket;
-
 class StateSocket;
-
 class VideoSocket;
+
+enum class SDK
+{
+  unknown,
+  v1_3,
+  v2_0
+};
 
 //=====================================================================================
 // Tello driver implements Tello SDK 1.3 and 2.0
@@ -34,8 +40,12 @@ public:
   void spin_once();
 
   void lock() { mtx_.lock(); }
-
   void unlock() { mtx_.unlock(); }
+
+  bool connected();
+
+  SDK sdk() { return sdk_; }
+  void set_sdk(SDK sdk);
 
   // ROS publishers
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
@@ -44,15 +54,12 @@ public:
 private:
 
   void spin_1s();
-
   void spin_5s();
 
+  void command_callback(const std_msgs::msg::String::SharedPtr msg);
   void takeoff_callback(const std_msgs::msg::Empty::SharedPtr msg);
-
   void land_callback(const std_msgs::msg::Empty::SharedPtr msg);
-
   void flip_callback(const tello_msgs::msg::Flip::SharedPtr msg);
-
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
   // Sockets
@@ -64,10 +71,14 @@ private:
   std::mutex mtx_;
 
   // ROS subscriptions
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr takeoff_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr land_sub_;
   rclcpp::Subscription<tello_msgs::msg::Flip>::SharedPtr flip_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+
+  // State
+  SDK sdk_ = SDK::unknown;
 };
 
 //=====================================================================================
@@ -82,9 +93,7 @@ public:
     socket_(io_service_, udp::endpoint(udp::v4(), port)) {}
 
   bool receiving() { return receiving_; }
-
   void reset() { receiving_ = false; }
-
   rclcpp::Time last_time() { return last_time_; }
 
 protected:

@@ -35,8 +35,11 @@ void CommandSocket::process_packet(size_t r)
 
   if (!receiving_) {
     RCLCPP_INFO(driver_->get_logger(), "Receiving command responses");
+    driver_->set_sdk(SDK::v2_0);
     receiving_ = true;
   }
+
+  RCLCPP_INFO(driver_->get_logger(), std::string(buffer_.begin(), buffer_.begin() + r).c_str());
 }
 
 } // namespace tello_driver

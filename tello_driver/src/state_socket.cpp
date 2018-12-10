@@ -29,8 +29,8 @@ void StateSocket::process_packet(size_t r)
   last_time_ = driver_->now();
 
   if (!receiving_) {
-    bool v2 = (r > 0) && buffer_[0] == 'm';
-    RCLCPP_INFO(driver_->get_logger(), "Receiving state, SDK %s", (v2 ? "v2.0" : "v1.3"));
+    RCLCPP_INFO(driver_->get_logger(), "Receiving state");
+    driver_->set_sdk((r > 0) && buffer_[0] == 'm' ? SDK::v2_0 : SDK::v1_3);
     receiving_ = true;
   }
 

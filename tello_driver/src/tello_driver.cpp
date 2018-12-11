@@ -56,7 +56,6 @@ void TelloDriver::set_sdk(SDK sdk)
 void TelloDriver::command_callback(const std_msgs::msg::String::SharedPtr msg)
 {
   if (connected()) {
-    RCLCPP_INFO(get_logger(), "Sending '%s'...", msg->data.c_str());
     command_socket_->send_command(msg->data);
   }
 }
@@ -64,7 +63,6 @@ void TelloDriver::command_callback(const std_msgs::msg::String::SharedPtr msg)
 void TelloDriver::takeoff_callback(const std_msgs::msg::Empty::SharedPtr msg)
 {
   if (connected()) {
-    RCLCPP_INFO(get_logger(), "Taking off...");
     command_socket_->send_command("takeoff");
   }
 }
@@ -72,7 +70,6 @@ void TelloDriver::takeoff_callback(const std_msgs::msg::Empty::SharedPtr msg)
 void TelloDriver::land_callback(const std_msgs::msg::Empty::SharedPtr msg)
 {
   if (connected()) {
-    RCLCPP_INFO(get_logger(), "Landing...");
     command_socket_->send_command("land");
   }
 }
@@ -88,15 +85,14 @@ void TelloDriver::flip_callback(const tello_msgs::msg::Flip::SharedPtr msg)
   if (connected()) {
     std::stringstream ss;
     ss << "flip " << direction_names[msg->flip_command];
-    RCLCPP_INFO(get_logger(), ss.str().c_str());
     command_socket_->send_command(ss.str());
   }
 }
 
 void TelloDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
-  // TODO don't send if a, b, c and d are close to 0
-  if (connected()) {
+  // TODO keep state, and don't send when we're on the ground, or in the middle of a command
+  if (false /*connected()*/) {
     std::stringstream ss;
     ss << "rc " << msg->linear.y * -100.0 << " " << msg->linear.x * 100.0
       << " " << msg->linear.z * 100.0 << " " << msg->angular.z * -100.0;
@@ -116,8 +112,8 @@ void TelloDriver::spin_once()
     spin_1s();
   }
 
-  if (counter % (5 * SPIN_RATE) == 0) {
-    spin_5s();
+  if (counter % (10 * SPIN_RATE) == 0) {
+    spin_10s();
   }
 
   mtx_.unlock();
@@ -138,23 +134,21 @@ void TelloDriver::spin_1s()
 
   if (!state_socket_->receiving()) {
     // First command to the drone must be "command"
-    RCLCPP_INFO(get_logger(), "Starting SDK...");
     command_socket_->send_command("command");
   }
 
   if (state_socket_->receiving() && !video_socket_->receiving()) {
     // Start video
-    RCLCPP_INFO(get_logger(), "Starting video...");
     command_socket_->send_command("streamon");
   }
 }
 
-// Do work every 5 seconds
-void TelloDriver::spin_5s()
+// Do work every 10 seconds
+void TelloDriver::spin_10s()
 {
   if (state_socket_->receiving() && video_socket_->receiving()) {
     // The drone will auto-land if it hears nothing for 15s
-    command_socket_->send_command("command");
+    command_socket_->send_command("battery?");
   }
 }
 

@@ -54,7 +54,7 @@ public:
 private:
 
   void spin_1s();
-  void spin_5s();
+  void spin_10s();
 
   void command_callback(const std_msgs::msg::String::SharedPtr msg);
   void takeoff_callback(const std_msgs::msg::Empty::SharedPtr msg);
@@ -97,6 +97,18 @@ public:
   rclcpp::Time last_time() { return last_time_; }
 
 protected:
+
+  void listen()
+  {
+    thread_ = std::thread(
+      [this]()
+      {
+        for (;;) {
+          size_t r = socket_.receive(asio::buffer(buffer_));
+          process_packet(r);
+        }
+      });
+  }
 
   virtual void process_packet(size_t r) = 0;
 

@@ -1,6 +1,5 @@
 #include "tello_driver.hpp"
 
-#include <iostream>
 #include <libavutil/frame.h>
 #include <opencv2/highgui.hpp>
 
@@ -19,16 +18,7 @@ VideoSocket::VideoSocket(TelloDriver *driver) : TelloSocket(driver, 11111)
 {
   buffer_ = std::vector<unsigned char>(2048);
   seq_buffer_ = std::vector<unsigned char>(65536);
-
-  // Listen for video packets from the drone
-  thread_ = std::thread(
-    [this]()
-    {
-      for (;;) {
-        size_t r = socket_.receive(asio::buffer(buffer_));
-        process_packet(r);
-      }
-    });
+  listen();
 }
 
 // Process a video packet from the drone

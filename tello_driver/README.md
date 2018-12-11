@@ -19,36 +19,21 @@ Send arbitrary strings to the drone using the `command` topic.
 Examples:
 ~~~~
 ros2 topic pub -1 /command "std_msgs/String" "{data: 'command'}"
+ros2 topic pub -1 /command "std_msgs/String" "{data: 'streamon'}"
 ros2 topic pub -1 /command "std_msgs/String" "{data: 'battery?'}"
 ros2 topic pub -1 /command "std_msgs/String" "{data: 'wifi?'}"
 ros2 topic pub -1 /command "std_msgs/String" "{data: 'takeoff'}"
+ros2 topic pub -1 /command "std_msgs/String" "{data: 'land'}"
 ~~~~
 
-## SDK
- 
-### Supported versions
+## Devices tested
 
-Which firmware versions? TODO
+* Tello
+  * Firmware v01.04.35.01, SDK v1.3
+* Tello EDU
+  * Firmware v02.04.69.03, SDK v2.0
 
-Which device versions? TODO
-
-### SDK 1.3
-
-Test results:
-* video streaming works fine
-* `takeoff` works fine
-* `land` works fine
-* `rc a b c d` works fine
-
-### SDK 2.0
-
-Test results:
-* video streaming works fine
-* `takeoff` always returns `error`, this is blocking most testing
-* `land` always returns `ok`
-* `streamon` and `streamoff` both return `ok`, but are ignored (the video is always streaming)
-
-## Running nodes inside CLion
+## Running C++ nodes inside CLion
 
 Set the LD_LIBRARY_PATH to pick up the compiled `tello_msgs` library.
 Example:
@@ -58,6 +43,10 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:~/ros2/flock2_ws/install/tello_msgs/li
 bash ~/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/183.4588.63/bin/clion.sh
 ~~~~
 
-## h264decoder
+## Credits
 
-From https://github.com/DaWelter/h264decoder.
+The h264decoder is from: https://github.com/DaWelter/h264decoder
+
+## Resources
+
+[Tello firmware versions](https://dl-cdn.ryzerobotics.com/downloads/Tello/20180816/Tello_Release_Notes_en.pdf)

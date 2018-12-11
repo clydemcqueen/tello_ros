@@ -1,8 +1,5 @@
 #include "tello_driver.hpp"
 
-#include <iostream>
-#include <regex>
-
 namespace tello_driver {
 
 // v1.3: pitch:0;roll:-1;yaw:0;vgx:0;vgy:0;vgz:0;templ:46;temph:49;tof:10;h:0;bat:100;baro:18.92;time:0;agx:-12.00;agy:16.00;agz:-993.00;
@@ -11,16 +8,7 @@ namespace tello_driver {
 StateSocket::StateSocket(TelloDriver *driver) : TelloSocket(driver, 8890)
 {
   buffer_ = std::vector<unsigned char>(1024);
-
-  // Listen for state packets from the drone
-  thread_ = std::thread(
-    [this]()
-    {
-      for (;;) {
-        size_t r = socket_.receive(asio::buffer(buffer_));
-        process_packet(r);
-      }
-    });
+  listen();
 }
 
 // Process a state packet from the drone

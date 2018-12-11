@@ -1,32 +1,17 @@
 #include "tello_driver.hpp"
 
-#include <iostream>
-
 namespace tello_driver {
 
-CommandSocket::CommandSocket(TelloDriver *driver) : TelloSocket(driver, 0)
+CommandSocket::CommandSocket(TelloDriver *driver) : TelloSocket(driver, 38065)
 {
   buffer_ = std::vector<unsigned char>(1024);
+  listen();
 }
 
 void CommandSocket::send_command(std::string command)
 {
+  RCLCPP_INFO(driver_->get_logger(), "Sending '%s'...", command.c_str());
   socket_.send_to(asio::buffer(command), remote_endpoint_);
-
-  // The first send on the command socket will bind the local side to a port
-  if (!local_endpoint_bound_) {
-    local_endpoint_bound_ = true;
-
-    // Listen for command responses from the drone
-    thread_ = std::thread(
-      [this]()
-      {
-        for (;;) {
-          size_t r = socket_.receive(asio::buffer(buffer_));
-          process_packet(r);
-        }
-      });
-  }
 }
 
 void CommandSocket::process_packet(size_t r)
@@ -34,12 +19,10 @@ void CommandSocket::process_packet(size_t r)
   last_time_ = driver_->now();
 
   if (!receiving_) {
-    RCLCPP_INFO(driver_->get_logger(), "Receiving command responses");
-    driver_->set_sdk(SDK::v2_0);
     receiving_ = true;
   }
 
-  RCLCPP_INFO(driver_->get_logger(), std::string(buffer_.begin(), buffer_.begin() + r).c_str());
+  RCLCPP_INFO(driver_->get_logger(), "Received '%s'", std::string(buffer_.begin(), buffer_.begin() + r).c_str());
 }
 
 } // namespace tello_driver

@@ -24,7 +24,9 @@ VideoSocket::VideoSocket(TelloDriver *driver) : TelloSocket(driver, 11111)
 // Process a video packet from the drone
 void VideoSocket::process_packet(size_t r)
 {
-  last_time_ = driver_->now();
+  std::lock_guard<std::mutex> lock(mtx_);
+
+  receive_time_ = driver_->now();
 
   if (!receiving_) {
     // First packet
@@ -83,15 +85,15 @@ void VideoSocket::decode_frames()
         cv::waitKey(1);
 
         // Publish a ROS message
-        driver_->lock();
         if (driver_->count_subscribers(driver_->image_pub_->get_topic_name()) > 0) {
           std_msgs::msg::Header header{};
           header.frame_id = "camera_frame";
           header.stamp = driver_->now();
           cv_bridge::CvImage image{header, sensor_msgs::image_encodings::BGR8, mat};
           driver_->image_pub_->publish(image.toImageMsg());
+
+          // TODO publish camera info
         }
-        driver_->unlock();
       }
 
       next += consumed;

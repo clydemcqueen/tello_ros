@@ -14,16 +14,25 @@ StateSocket::StateSocket(TelloDriver *driver) : TelloSocket(driver, 8890)
 // Process a state packet from the drone
 void StateSocket::process_packet(size_t r)
 {
-  last_time_ = driver_->now();
+  std::lock_guard<std::mutex> lock(mtx_);
+
+  static std::map<SDK, std::string> enum_names{
+    {SDK::unknown, "unknown"},
+    {SDK::v1_3, "v1.3"},
+    {SDK::v2_0, "v2.0"}};
+
+  receive_time_ = driver_->now();
 
   if (!receiving_) {
-    RCLCPP_INFO(driver_->get_logger(), "Receiving state");
-    driver_->set_sdk((r > 0) && buffer_[0] == 'm' ? SDK::v2_0 : SDK::v1_3);
+    sdk_ = (r > 0) && buffer_[0] == 'm' ? SDK::v2_0 : SDK::v1_3;
+    RCLCPP_INFO(driver_->get_logger(), "Receiving state, SDK version %s", enum_names[sdk_].c_str());
     receiving_ = true;
   }
 
   // Unpack and publish
-  // TODO
+  if (driver_->count_subscribers(driver_->flight_data_pub_->get_topic_name()) > 0) {
+    // TODO
+  }
 }
 
 } // namespace tello_driver

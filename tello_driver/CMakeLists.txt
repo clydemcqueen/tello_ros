@@ -51,6 +51,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 
 add_executable(tello_driver
   src/tello_driver.cpp
+  src/tello_socket.cpp
   src/command_socket.cpp
   src/state_socket.cpp
   src/video_socket.cpp

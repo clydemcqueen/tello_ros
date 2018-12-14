@@ -36,6 +36,11 @@ enum class SDK
 // rclcpp::Node::get_logger()
 // rclcpp::Publisher::get_topic_name()
 // rclcpp::Publisher::publish()
+//
+// FastRTPS also uses asio, and there's already an asio::io_service in the rclcpp::Node
+// process. This can cause a deadlock. We avoid this by pushing the asio calls to the
+// TelloSocket instances, which run in their own threads. See:
+// https://github.com/ros2/rmw_fastrtps/issues/176
 //=====================================================================================
 
 class TelloDriver : public rclcpp::Node

@@ -28,11 +28,12 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-# Generate ROS messages
+# Generate ROS interfaces
 rosidl_generate_interfaces(
   tello_msgs
   "msg/FlightData.msg"
-  "msg/Flip.msg"
+  "msg/TelloResponse.msg"
+  "srv/TelloCommand.srv"
 )
 
 ament_package()

@@ -33,7 +33,7 @@ rosidl_generate_interfaces(
   tello_msgs
   "msg/FlightData.msg"
   "msg/TelloResponse.msg"
-  "srv/TelloCommand.srv"
+  "srv/TelloAction.srv"
 )
 
 ament_package()

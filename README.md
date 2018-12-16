@@ -30,7 +30,7 @@ Camera information is sent on the `camera_info` topic.
 
 ### Services
 
-* `~tello_command` tello_msgs/TelloCommand
+* `~tello_action` tello_msgs/TelloAction
 
 ### Published topics
 
@@ -55,10 +55,10 @@ Camera information is sent on the `camera_info` topic.
 Send arbitrary strings to the drone using the `command` topic.
 Examples:
 ~~~~
-ros2 service call /tello_command tello_msgs/TelloCommand "{cmd: 'takeoff'}"
-ros2 service call /tello_command tello_msgs/TelloCommand "{cmd: 'land'}"
-ros2 service call /tello_command tello_msgs/TelloCommand "{cmd: 'rc 10 0 0 0'}"
-ros2 service call /tello_command tello_msgs/TelloCommand "{cmd: 'battery?'}"
+ros2 service call /tello_action tello_msgs/TelloAction "{cmd: 'takeoff'}"
+ros2 service call /tello_action tello_msgs/TelloAction "{cmd: 'land'}"
+ros2 service call /tello_action tello_msgs/TelloAction "{cmd: 'rc 10 0 0 0'}"
+ros2 service call /tello_action tello_msgs/TelloAction "{cmd: 'battery?'}"
 ~~~~
 
 ## Devices tested

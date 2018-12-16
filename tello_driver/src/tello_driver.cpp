@@ -18,7 +18,7 @@ TelloDriver::TelloDriver() : Node("tello_driver")
   tello_response_pub_ = create_publisher<tello_msgs::msg::TelloResponse>("tello_response", 1);
 
   // ROS service
-  command_srv_ = create_service<tello_msgs::srv::TelloCommand>("tello_command",
+  command_srv_ = create_service<tello_msgs::srv::TelloAction>("tello_action",
     std::bind(&TelloDriver::command_callback, this,
     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
@@ -34,8 +34,8 @@ TelloDriver::~TelloDriver()
 
 void TelloDriver::command_callback(
   const std::shared_ptr<rmw_request_id_t> request_header,
-  const std::shared_ptr<tello_msgs::srv::TelloCommand::Request> request,
-  std::shared_ptr<tello_msgs::srv::TelloCommand::Response> response)
+  const std::shared_ptr<tello_msgs::srv::TelloAction::Request> request,
+  std::shared_ptr<tello_msgs::srv::TelloAction::Response> response)
 {
   (void)request_header;
   if (!state_socket_->receiving() || !video_socket_->receiving()) {

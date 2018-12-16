@@ -8,7 +8,7 @@
 #include "std_msgs/msg/string.hpp"
 #include "tello_msgs/msg/flight_data.hpp"
 #include "tello_msgs/msg/tello_response.hpp"
-#include "tello_msgs/srv/tello_command.hpp"
+#include "tello_msgs/srv/tello_action.hpp"
 
 #include "h264decoder.hpp"
 
@@ -65,8 +65,8 @@ private:
 
   void command_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
-    const std::shared_ptr<tello_msgs::srv::TelloCommand::Request> request,
-    std::shared_ptr<tello_msgs::srv::TelloCommand::Response> response);
+    const std::shared_ptr<tello_msgs::srv::TelloAction::Request> request,
+    std::shared_ptr<tello_msgs::srv::TelloAction::Response> response);
 
   // Sockets
   std::unique_ptr<CommandSocket> command_socket_;
@@ -74,7 +74,7 @@ private:
   std::unique_ptr<VideoSocket> video_socket_;
 
   // ROS services
-  rclcpp::Service<tello_msgs::srv::TelloCommand>::SharedPtr command_srv_;
+  rclcpp::Service<tello_msgs::srv::TelloAction>::SharedPtr command_srv_;
 };
 
 //=====================================================================================

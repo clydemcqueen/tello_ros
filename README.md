@@ -22,6 +22,9 @@ When the command completes, the next command may be initiated.
 Tello drones auto-land if no commands are received within 15 seconds.
 The driver sends the appropriate keep-alive messages to avoid this.
 
+The driver sends telemetry data on the `flight_data` topic.
+The presence of this data is a good indication that the drone is connected.
+
 The driver activates video and sends images on the `image_raw` topic.
 Camera information is sent on the `camera_info` topic.
 

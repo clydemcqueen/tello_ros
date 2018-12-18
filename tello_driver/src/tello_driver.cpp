@@ -84,7 +84,7 @@ void TelloDriver::spin_1s()
 
   bool timeout = false;
 
-  if (command_socket_->waiting() && now() - command_socket_->send_time() > rclcpp::Duration(5, 0)) {
+  if (command_socket_->waiting() && now() - command_socket_->send_time() > rclcpp::Duration(10, 0)) {
     RCLCPP_ERROR(get_logger(), "Command timed out");
     command_socket_->timeout();
     timeout = true;
@@ -129,6 +129,7 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
   rclcpp::Rate r(tello_driver::SPIN_RATE);
   auto node = std::make_shared<tello_driver::TelloDriver>();
+  auto result = rcutils_logging_set_logger_level(node->get_logger().get_name(), RCUTILS_LOG_SEVERITY_INFO);
 
   while (rclcpp::ok()) {
     // Do our work

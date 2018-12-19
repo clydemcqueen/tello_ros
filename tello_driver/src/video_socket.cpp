@@ -1,4 +1,5 @@
 #include "tello_driver.hpp"
+#include "get_camera_info.cpp"
 
 #include <libavutil/frame.h>
 #include <opencv2/highgui.hpp>
@@ -16,6 +17,10 @@ namespace tello_driver {
 
 VideoSocket::VideoSocket(TelloDriver *driver) : TelloSocket(driver, 11111)
 {
+  if (!get_camera_info(camera_info_msg_)) {
+    RCLCPP_ERROR(driver_->get_logger(), "Cannot get camera info");
+  }
+
   buffer_ = std::vector<unsigned char>(2048);
   seq_buffer_ = std::vector<unsigned char>(65536);
   listen();
@@ -84,15 +89,20 @@ void VideoSocket::decode_frames()
         cv::imshow("frame", mat);
         cv::waitKey(1);
 
-        // Publish a ROS message
+        // Synchronize ROS messages
+        auto stamp = driver_->now();
+
         if (driver_->count_subscribers(driver_->image_pub_->get_topic_name()) > 0) {
           std_msgs::msg::Header header{};
           header.frame_id = "camera_frame";
-          header.stamp = driver_->now();
+          header.stamp = stamp;
           cv_bridge::CvImage image{header, sensor_msgs::image_encodings::BGR8, mat};
           driver_->image_pub_->publish(image.toImageMsg());
+        }
 
-          // TODO publish camera info
+        if (driver_->count_subscribers(driver_->camera_info_pub_->get_topic_name()) > 0) {
+          camera_info_msg_.header.stamp = stamp;
+          driver_->camera_info_pub_->publish(camera_info_msg_);
         }
       }
 

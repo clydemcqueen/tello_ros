@@ -176,6 +176,8 @@ private:
 
   H264Decoder decoder_;                     // Decodes h264
   ConverterRGB24 converter_;                // Converts pixels from YUV420P to BGR24
+
+  sensor_msgs::msg::CameraInfo camera_info_msg_;
 };
 
 } // namespace tello_driver

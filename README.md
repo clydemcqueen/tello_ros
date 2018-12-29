@@ -42,7 +42,8 @@ Camera information is sent on the `camera_info` topic.
 ## Requirements
 
 * Ubuntu 18.04
-* ROS2 Bouncy
+* ROS2 Crystal Clemmys, also install:
+  * ros-crystal-cv-bridge
 * libasio-dev 1.10.8-1
 * ffmpeg 3.4.4-0ubuntu0.18.04.1, which includes these libraries:
   * libavcodec.so.57.107.100
@@ -73,7 +74,7 @@ ros2 service call /tello_action tello_msgs/TelloAction "{cmd: 'battery?'}"
 Set the LD_LIBRARY_PATH to pick up the compiled `tello_msgs` library.
 Example:
 ~~~~
-source /opt/ros/bouncy/setup.bash
+source /opt/ros/crystal/setup.bash
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:~/ros2/flock2_ws/install/tello_msgs/lib
 bash ~/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/183.4588.63/bin/clion.sh
 ~~~~

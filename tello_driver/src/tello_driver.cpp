@@ -1,16 +1,14 @@
 #include "tello_driver.hpp"
 
-#include <iostream>
-
 using asio::ip::udp;
 
 namespace tello_driver {
 
-constexpr int SPIN_RATE = 100;            // Message publish rate in Hz
-constexpr int32_t STATE_TIMEOUT = 5;      // We stopped receiving telemetry
-constexpr int32_t VIDEO_TIMEOUT = 5;      // We stopped receiving video
-constexpr int32_t KEEP_ALIVE = 10;        // We stopped receiving input from other ROS nodes
-constexpr int32_t COMMAND_TIMEOUT = 10;   // Drone didn't respond to a command
+constexpr int SPIN_RATE = 100;            // Spin rate in Hz
+constexpr int32_t STATE_TIMEOUT = 4;      // We stopped receiving telemetry
+constexpr int32_t VIDEO_TIMEOUT = 4;      // We stopped receiving video
+constexpr int32_t KEEP_ALIVE = 12;        // We stopped receiving input from other ROS nodes
+constexpr int32_t COMMAND_TIMEOUT = 9;    // Drone didn't respond to a command
 
 TelloDriver::TelloDriver() : Node("tello_driver")
 {
@@ -24,6 +22,10 @@ TelloDriver::TelloDriver() : Node("tello_driver")
   command_srv_ = create_service<tello_msgs::srv::TelloAction>("tello_action",
     std::bind(&TelloDriver::command_callback, this,
     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+  // ROS subscription
+  cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>("cmd_vel",
+    std::bind(&TelloDriver::cmd_vel_callback, this, std::placeholders::_1));
 
   // Sockets
   command_socket_ = std::make_unique<CommandSocket>(this);
@@ -50,6 +52,18 @@ void TelloDriver::command_callback(
   } else {
     command_socket_->initiate_command(request->cmd, true);
     response->rc = response->OK;
+  }
+}
+
+void TelloDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+{
+  if (!command_socket_->waiting()) {
+    std::ostringstream rc;
+    rc << "rc " << static_cast<int>(round(msg->linear.y * -100))
+      << " " << static_cast<int>(round(msg->linear.x * 100))
+      << " " << static_cast<int>(round(msg->linear.z * 100))
+      << " " << static_cast<int>(round(msg->angular.z * -100));
+    command_socket_->initiate_command(rc.str(), false);
   }
 }
 
@@ -123,7 +137,6 @@ void TelloDriver::spin_1s()
 }
 
 } // namespace tello_driver
-
 
 int main(int argc, char **argv)
 {

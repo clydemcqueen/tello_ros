@@ -68,6 +68,8 @@ private:
     const std::shared_ptr<tello_msgs::srv::TelloAction::Request> request,
     std::shared_ptr<tello_msgs::srv::TelloAction::Response> response);
 
+  void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
+
   // Sockets
   std::unique_ptr<CommandSocket> command_socket_;
   std::unique_ptr<StateSocket> state_socket_;
@@ -75,6 +77,9 @@ private:
 
   // ROS services
   rclcpp::Service<tello_msgs::srv::TelloAction>::SharedPtr command_srv_;
+
+  // ROS subscriptions
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
 };
 
 //=====================================================================================

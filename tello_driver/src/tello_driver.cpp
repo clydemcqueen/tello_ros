@@ -6,8 +6,11 @@ using asio::ip::udp;
 
 namespace tello_driver {
 
-// Message publish rate in Hz
-constexpr int SPIN_RATE = 100;
+constexpr int SPIN_RATE = 100;            // Message publish rate in Hz
+constexpr int32_t STATE_TIMEOUT = 5;      // We stopped receiving telemetry
+constexpr int32_t VIDEO_TIMEOUT = 5;      // We stopped receiving video
+constexpr int32_t KEEP_ALIVE = 10;        // We stopped receiving input from other ROS nodes
+constexpr int32_t COMMAND_TIMEOUT = 10;   // Drone didn't respond to a command
 
 TelloDriver::TelloDriver() : Node("tello_driver")
 {
@@ -39,8 +42,10 @@ void TelloDriver::command_callback(
 {
   (void)request_header;
   if (!state_socket_->receiving() || !video_socket_->receiving()) {
+    RCLCPP_WARN(get_logger(), "Not connected, dropping '%s'", request->cmd.c_str());
     response->rc = response->ERROR_NOT_CONNECTED;
   } else if (command_socket_->waiting()) {
+    RCLCPP_WARN(get_logger(), "Busy, dropping '%s'", request->cmd.c_str());
     response->rc = response->ERROR_BUSY;
   } else {
     command_socket_->initiate_command(request->cmd, true);
@@ -84,19 +89,19 @@ void TelloDriver::spin_1s()
 
   bool timeout = false;
 
-  if (command_socket_->waiting() && now() - command_socket_->send_time() > rclcpp::Duration(10, 0)) {
+  if (command_socket_->waiting() && now() - command_socket_->send_time() > rclcpp::Duration(COMMAND_TIMEOUT, 0)) {
     RCLCPP_ERROR(get_logger(), "Command timed out");
     command_socket_->timeout();
     timeout = true;
   }
 
-  if (state_socket_->receiving() && now() - state_socket_->receive_time() > rclcpp::Duration(5, 0)) {
+  if (state_socket_->receiving() && now() - state_socket_->receive_time() > rclcpp::Duration(STATE_TIMEOUT, 0)) {
     RCLCPP_ERROR(get_logger(), "No state received for 5s");
     state_socket_->timeout();
     timeout = true;
   }
 
-  if (video_socket_->receiving() && now() - video_socket_->receive_time() > rclcpp::Duration(5, 0)) {
+  if (video_socket_->receiving() && now() - video_socket_->receive_time() > rclcpp::Duration(VIDEO_TIMEOUT, 0)) {
     RCLCPP_ERROR(get_logger(), "No video received for 5s");
     video_socket_->timeout();
     timeout = true;
@@ -107,13 +112,12 @@ void TelloDriver::spin_1s()
   }
 
   //====
-  // Keep-alive
+  // Keep-alive, drone will auto-land if it hears nothing for 15s
   //====
 
   if (state_socket_->receiving() && video_socket_->receiving() && !command_socket_->waiting() &&
-    now() - command_socket_->send_time() > rclcpp::Duration(10, 0)) {
-    // The drone will auto-land if it hears nothing for 15s
-    command_socket_->initiate_command("battery?", false);
+    now() - command_socket_->send_time() > rclcpp::Duration(KEEP_ALIVE, 0)) {
+    command_socket_->initiate_command("rc 0 0 0 0", false);
     return;
   }
 }
@@ -129,7 +133,7 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
   rclcpp::Rate r(tello_driver::SPIN_RATE);
   auto node = std::make_shared<tello_driver::TelloDriver>();
-  auto result = rcutils_logging_set_logger_level(node->get_logger().get_name(), RCUTILS_LOG_SEVERITY_INFO);
+  auto result = rcutils_logging_set_logger_level(node->get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG);
 
   while (rclcpp::ok()) {
     // Do our work

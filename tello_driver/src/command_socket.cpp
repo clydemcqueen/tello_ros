@@ -36,14 +36,16 @@ void CommandSocket::initiate_command(std::string command, bool respond)
 {
   std::lock_guard<std::mutex> lock(mtx_);
 
-  if (waiting_) {
-    RCLCPP_ERROR(driver_->get_logger(), "Busy, dropping '%s'", command.c_str());
-  } else {
+  if (!waiting_) {
     RCLCPP_DEBUG(driver_->get_logger(), "Sending '%s'...", command.c_str());
     socket_.send_to(asio::buffer(command), remote_endpoint_);
     send_time_ = driver_->now();
-    respond_ = respond;
-    waiting_ = true;
+
+    // Wait for a response for all commands except "rc"
+    if (command.rfind("rc", 0) != 0) {
+      respond_ = respond;
+      waiting_ = true;
+    }
   }
 }
 

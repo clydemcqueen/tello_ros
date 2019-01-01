@@ -61,9 +61,9 @@ add_executable(tello_driver
 
 ament_target_dependencies(tello_driver
   cv_bridge
+  geometry_msgs
   OpenCV
   rclcpp
-  geometry_msgs
   sensor_msgs
   std_msgs
   tello_msgs)
@@ -89,6 +89,17 @@ target_compile_definitions(tello_emulator
   PRIVATE ASIO_HAS_STD_CHRONO)
 
 #=============
+# Tello joy node
+#=============
+
+add_executable(tello_joy src/tello_joy.cpp)
+
+ament_target_dependencies(tello_joy
+  geometry_msgs
+  rclcpp
+  sensor_msgs)
+
+#=============
 # Install
 #=============
 
@@ -97,7 +108,15 @@ install(
   TARGETS
   tello_driver
   tello_emulator
+  tello_joy
   DESTINATION lib/tello_driver
+)
+
+# Install launch directory
+install(
+  DIRECTORY
+  launch
+  DESTINATION share/tello_driver
 )
 
 #=============

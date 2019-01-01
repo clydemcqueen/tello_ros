@@ -97,7 +97,8 @@ add_executable(tello_joy src/tello_joy.cpp)
 ament_target_dependencies(tello_joy
   geometry_msgs
   rclcpp
-  sensor_msgs)
+  sensor_msgs
+  tello_msgs)
 
 #=============
 # Install

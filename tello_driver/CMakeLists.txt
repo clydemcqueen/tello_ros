@@ -113,9 +113,10 @@ install(
   DESTINATION lib/tello_driver
 )
 
-# Install launch directory
+# Install various directories
 install(
   DIRECTORY
+  cfg
   launch
   DESTINATION share/tello_driver
 )

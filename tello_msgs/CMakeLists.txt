@@ -27,6 +27,7 @@ endif()
 # Find packages
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # Generate ROS interfaces
 rosidl_generate_interfaces(
@@ -34,6 +35,7 @@ rosidl_generate_interfaces(
   "msg/FlightData.msg"
   "msg/TelloResponse.msg"
   "srv/TelloAction.srv"
+  DEPENDENCIES std_msgs
 )
 
 ament_package()

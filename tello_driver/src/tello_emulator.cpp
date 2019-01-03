@@ -8,10 +8,14 @@ using asio::ip::udp;
 
 //=====================================================================================
 // Tello emulator
-// Implements Tello SDK v1.3
 //=====================================================================================
 
-void emulator()
+const std::string FD_1_3{"pitch:1;roll:5;yaw:0;vgx:0;vgy:0;vgz:0;templ:43;temph:46;"
+                         "tof:10;h:0;bat:83;baro:150.12;time:0;agx:15.00;agy:-97.00;agz:-988.00;"};
+const std::string FD_2_0{"mid:-1;x:0;y:0;z:0;mpry:0,0,0;pitch:3;roll:-1;yaw:0;vgx:0;vgy:0;vgz:0;templ:50;temph:54;"
+                         "tof:10;h:0;bat:51;baro:147.94;time:0;agx:54.00;agy:28.00;agz:-1004.00;"};
+
+void emulator(bool emulate_2_0)
 {
   asio::io_service io_service;
 
@@ -49,7 +53,13 @@ void emulator()
     }
 
     // Respond to all commands except "rc"
-    if (command.rfind("rc", 0) != 0) {
+    if (command.rfind("sdk?", 0) == 0) {
+      if (emulate_2_0) {
+        command_socket.send_to(asio::buffer(std::string("20")), sender_endpoint);
+      } else {
+        command_socket.send_to(asio::buffer(std::string("unknown command: sdk?")), sender_endpoint);
+      }
+    } else if (command.rfind("rc", 0) != 0) {
       command_socket.send_to(asio::buffer(std::string("ok")), sender_endpoint);
     }
 
@@ -57,13 +67,14 @@ void emulator()
     if (!connected && command == "command")
     {
       connected = true;
+      auto flight_data = emulate_2_0 ? FD_2_0 : FD_1_3;
 
       state_thread = std::thread(
-        [&state_socket, &state_remote_endpoint]()
+        [&state_socket, &state_remote_endpoint, flight_data]()
         {
           for (;;)
           {
-            state_socket.send_to(asio::buffer(std::string("some state")), state_remote_endpoint);
+            state_socket.send_to(asio::buffer(flight_data), state_remote_endpoint);
             sleep(1);
           }
         });
@@ -91,7 +102,7 @@ int main(int argc, char* argv[])
 {
   try
   {
-    emulator();
+    emulator(false);
   }
   catch (std::exception& e)
   {

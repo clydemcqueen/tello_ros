@@ -1,9 +1,13 @@
 #include "tello_driver.hpp"
 
+#include <regex>
+
 namespace tello_driver {
 
-// v1.3: pitch:0;roll:-1;yaw:0;vgx:0;vgy:0;vgz:0;templ:46;temph:49;tof:10;h:0;bat:100;baro:18.92;time:0;agx:-12.00;agy:16.00;agz:-993.00;
-// v2.0: mid:-1;x:0;y:0;z:0;mpry:0,0,0;pitch:0;roll:5;yaw:0;vgx:0;vgy:0;vgz:0;templ:44;temph:47;tof:10;h:0;bat:100;baro:17.84;time:0;agx:10.00;agy:-98.00;agz:-988.00;
+// Goals:
+// * make the data useful by parsing all documented fields
+// * some future SDK version might introduce new field types, so don't parse undocumented fields
+// * send the raw string as well
 
 StateSocket::StateSocket(TelloDriver *driver) : TelloSocket(driver, 8890)
 {
@@ -11,28 +15,83 @@ StateSocket::StateSocket(TelloDriver *driver) : TelloSocket(driver, 8890)
   listen();
 }
 
-// Process a state packet from the drone
+// Process a state packet from the drone, runs at 10Hz
 void StateSocket::process_packet(size_t r)
 {
   std::lock_guard<std::mutex> lock(mtx_);
 
-  static std::map<SDK, std::string> enum_names{
-    {SDK::unknown, "unknown"},
-    {SDK::v1_3, "v1.3"},
-    {SDK::v2_0, "v2.0"}};
+  static std::map<uint8_t, std::string> enum_names{
+    {tello_msgs::msg::FlightData::SDK_UNKNOWN, "unknown"},
+    {tello_msgs::msg::FlightData::SDK_1_3, "v1.3"},
+    {tello_msgs::msg::FlightData::SDK_2_0, "v2.0"}};
 
   receive_time_ = driver_->now();
 
-  if (!receiving_) {
-    sdk_ = (r > 0) && buffer_[0] == 'm' ? SDK::v2_0 : SDK::v1_3;
-    RCLCPP_INFO(driver_->get_logger(), "Receiving state, SDK version %s", enum_names[sdk_].c_str());
-    receiving_ = true;
+  if (receiving_ && driver_->count_subscribers(driver_->flight_data_pub_->get_topic_name()) == 0) {
+    // Nothing to do
+    return;
   }
 
-  // Unpack and publish
+  // Split on ";" and ":" and generate a key:value map
+  std::map<std::string, std::string>fields;
+  std::string raw(buffer_.begin(), buffer_.begin() + r);
+  std::regex re("([^:]+):([^;]+);");
+  for (auto i = std::sregex_iterator(raw.begin(), raw.end(), re); i != std::sregex_iterator(); ++i) {
+    auto match = *i;
+    fields[match[1]] = match[2];
+  }
+
+  // First message?
+  if (!receiving_) {
+    receiving_ = true;
+
+    // Hack to figure out the SDK version
+    sdk_ = tello_msgs::msg::FlightData::SDK_1_3;
+    auto i = fields.find("mid");
+    if (i != fields.end() && i->second != "257") {
+      sdk_ = tello_msgs::msg::FlightData::SDK_2_0;
+    }
+    RCLCPP_INFO(driver_->get_logger(), "Receiving state, SDK version %s", enum_names[sdk_].c_str());
+  }
+
+  // Only send ROS messages if there are subscribers
   if (driver_->count_subscribers(driver_->flight_data_pub_->get_topic_name()) > 0) {
     tello_msgs::msg::FlightData msg;
-    // TODO
+    msg.header.stamp = receive_time_;
+    msg.raw = raw;
+    msg.sdk = sdk_;
+
+    try {
+
+      if (sdk_ == tello_msgs::msg::FlightData::SDK_2_0) {
+        msg.mid = std::stoi(fields["mid"]);
+        msg.x = std::stoi(fields["x"]);
+        msg.y = std::stoi(fields["y"]);
+        msg.z = std::stoi(fields["z"]);
+      }
+
+      msg.pitch = std::stoi(fields["pitch"]);
+      msg.roll = std::stoi(fields["roll"]);
+      msg.yaw = std::stoi(fields["yaw"]);
+      msg.vgx = std::stoi(fields["vgx"]);
+      msg.vgy = std::stoi(fields["vgy"]);
+      msg.vgz = std::stoi(fields["vgz"]);
+      msg.templ = std::stoi(fields["templ"]);
+      msg.temph = std::stoi(fields["temph"]);
+      msg.tof = std::stoi(fields["tof"]);
+      msg.h = std::stoi(fields["h"]);
+      msg.bat = std::stoi(fields["bat"]);
+      msg.baro = std::stof(fields["baro"]);
+      msg.time = std::stoi(fields["time"]);
+      msg.agx = std::stof(fields["agx"]);
+      msg.agy = std::stof(fields["agy"]);
+      msg.agz = std::stof(fields["agz"]);
+
+    } catch (std::exception e) {
+      RCLCPP_ERROR(driver_->get_logger(), "Can't parse flight data");
+      return;
+    }
+
     driver_->flight_data_pub_->publish(msg);
   }
 }

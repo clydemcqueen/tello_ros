@@ -1,38 +1,53 @@
-# Flight data, based on Tello SDK 1.3 TODO verify these against SDK
+std_msgs/Header header
 
-# Battery state:
-int32 battery_percent                     # Remaining battery, 0-100
-float32 estimated_flight_time_remaining   # Remaining flight time, seconds
-bool battery_low                          # Battery is low
-bool battery_lower                        # Battery is really low (the red light is flashing)
+#######
+# Raw string
+#######
 
-# Flight modes:
-uint8 FLIGHT_MODE_GROUND=1          # Motors off
-uint8 FLIGHT_MODE_HOVER=6           # Hovering
-uint8 FLIGHT_MODE_TAKING_OFF=11     # Taking off
-uint8 FLIGHT_MODE_LANDING=12        # Landing
-uint8 FLIGHT_MODE_SPINNING_UP=41    # Spinning up the props, will take off soon
-uint8 flight_mode
+string raw
 
-# Flight time:
-float32 flight_time                 # Flight time since power up, in seconds
+#######
+# SDK version
+#######
 
-# Position and velocity, negative numbers mean "no data":
-float32 east_speed                  # meters/second
-float32 north_speed                 # meters/second
-float32 ground_speed                # meters/second
-float32 altitude                    # Height off the ground in meters
+uint8 SDK_UNKNOWN=0
+uint8 SDK_1_3=1
+uint8 SDK_2_0=2
+uint8 sdk
 
-# Equipment status:
-int32 EQUIPMENT_OK=0                # Everything is OK
-int32 EQUIPMENT_UNSTABLE=21         # The drone is unstable, tilted at an odd angle or upside down
-int32 EQUIPMENT_TIMER_EXCEEDED=205  # No input for 15 seconds, shutting down
-int32 equipment
+#######
+# SDK 1.3+ fields
+#######
 
-# Temperature:
-bool high_temperature               # It's getting warm in here
+int32 pitch   # pitch in degrees
+int32 roll    # roll in degrees
+int32 yaw     # yaw in degrees relative to startup orientation
 
-# ???
-bool em_ground                      # ???
-bool em_open                        # ???
-bool em_sky                         # ???
+int32 vgx     # x velocity in m/s, +forward
+int32 vgy     # y velocity in m/s, +right
+int32 vgz     # z velocity in m/s, +down
+
+int32 templ   # lowest temp in C
+int32 temph   # highest temp in C
+
+int32 tof     # time of flight distance in cm
+int32 h       # height in cm
+
+int32 bat     # battery %
+
+float32 baro  # barometric altitude in m
+int32 time    # time used by motor in seconds
+
+# Acceleration includes gravity
+float32 agx   # x acceleration in mm/s^2, +forward
+float32 agy   # y acceleration in mm/s^2, +right
+float32 agz   # z acceleration in mm/s^2, +down
+
+#######
+# SDK 2.0+ fields
+#######
+
+int32 mid     # mission pad id, or -1 if not found
+int32 x       # x coord relative to mission pad in cm, or 0 if not found
+int32 y       # y coord relative to mission pad in cm, or 0 if not found
+int32 z       # z coord relative to mission pad in cm, or 0 if not found

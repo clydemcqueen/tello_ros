@@ -20,13 +20,6 @@ class CommandSocket;
 class StateSocket;
 class VideoSocket;
 
-enum class SDK
-{
-  unknown,
-  v1_3,
-  v2_0
-};
-
 //=====================================================================================
 // Tello driver implements Tello SDK 1.3 and 2.0
 //
@@ -157,7 +150,7 @@ private:
 
   void process_packet(size_t r) override;
 
-  SDK sdk_ = SDK::unknown;    // Tello SDK version
+  uint8_t sdk_ = tello_msgs::msg::FlightData::SDK_UNKNOWN;  // Tello SDK version
 };
 
 //=====================================================================================

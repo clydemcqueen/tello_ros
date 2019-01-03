@@ -1,13 +1,14 @@
 #include "tello_driver.hpp"
 
-#include <iostream>
-
 using asio::ip::udp;
 
 namespace tello_driver {
 
-// Message publish rate in Hz
-constexpr int SPIN_RATE = 100;
+constexpr int SPIN_RATE = 100;            // Spin rate in Hz
+constexpr int32_t STATE_TIMEOUT = 4;      // We stopped receiving telemetry
+constexpr int32_t VIDEO_TIMEOUT = 4;      // We stopped receiving video
+constexpr int32_t KEEP_ALIVE = 12;        // We stopped receiving input from other ROS nodes
+constexpr int32_t COMMAND_TIMEOUT = 9;    // Drone didn't respond to a command
 
 TelloDriver::TelloDriver() : Node("tello_driver")
 {
@@ -18,9 +19,13 @@ TelloDriver::TelloDriver() : Node("tello_driver")
   tello_response_pub_ = create_publisher<tello_msgs::msg::TelloResponse>("tello_response", 1);
 
   // ROS service
-  command_srv_ = create_service<tello_msgs::srv::TelloCommand>("tello_command",
+  command_srv_ = create_service<tello_msgs::srv::TelloAction>("tello_action",
     std::bind(&TelloDriver::command_callback, this,
     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+  // ROS subscription
+  cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>("cmd_vel",
+    std::bind(&TelloDriver::cmd_vel_callback, this, std::placeholders::_1));
 
   // Sockets
   command_socket_ = std::make_unique<CommandSocket>(this);
@@ -34,17 +39,31 @@ TelloDriver::~TelloDriver()
 
 void TelloDriver::command_callback(
   const std::shared_ptr<rmw_request_id_t> request_header,
-  const std::shared_ptr<tello_msgs::srv::TelloCommand::Request> request,
-  std::shared_ptr<tello_msgs::srv::TelloCommand::Response> response)
+  const std::shared_ptr<tello_msgs::srv::TelloAction::Request> request,
+  std::shared_ptr<tello_msgs::srv::TelloAction::Response> response)
 {
   (void)request_header;
   if (!state_socket_->receiving() || !video_socket_->receiving()) {
+    RCLCPP_WARN(get_logger(), "Not connected, dropping '%s'", request->cmd.c_str());
     response->rc = response->ERROR_NOT_CONNECTED;
   } else if (command_socket_->waiting()) {
+    RCLCPP_WARN(get_logger(), "Busy, dropping '%s'", request->cmd.c_str());
     response->rc = response->ERROR_BUSY;
   } else {
     command_socket_->initiate_command(request->cmd, true);
     response->rc = response->OK;
+  }
+}
+
+void TelloDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+{
+  if (!command_socket_->waiting()) {
+    std::ostringstream rc;
+    rc << "rc " << static_cast<int>(round(msg->linear.y * -100))
+      << " " << static_cast<int>(round(msg->linear.x * 100))
+      << " " << static_cast<int>(round(msg->linear.z * 100))
+      << " " << static_cast<int>(round(msg->angular.z * -100));
+    command_socket_->initiate_command(rc.str(), false);
   }
 }
 
@@ -84,19 +103,19 @@ void TelloDriver::spin_1s()
 
   bool timeout = false;
 
-  if (command_socket_->waiting() && now() - command_socket_->send_time() > rclcpp::Duration(5, 0)) {
+  if (command_socket_->waiting() && now() - command_socket_->send_time() > rclcpp::Duration(COMMAND_TIMEOUT, 0)) {
     RCLCPP_ERROR(get_logger(), "Command timed out");
     command_socket_->timeout();
     timeout = true;
   }
 
-  if (state_socket_->receiving() && now() - state_socket_->receive_time() > rclcpp::Duration(5, 0)) {
+  if (state_socket_->receiving() && now() - state_socket_->receive_time() > rclcpp::Duration(STATE_TIMEOUT, 0)) {
     RCLCPP_ERROR(get_logger(), "No state received for 5s");
     state_socket_->timeout();
     timeout = true;
   }
 
-  if (video_socket_->receiving() && now() - video_socket_->receive_time() > rclcpp::Duration(5, 0)) {
+  if (video_socket_->receiving() && now() - video_socket_->receive_time() > rclcpp::Duration(VIDEO_TIMEOUT, 0)) {
     RCLCPP_ERROR(get_logger(), "No video received for 5s");
     video_socket_->timeout();
     timeout = true;
@@ -107,19 +126,17 @@ void TelloDriver::spin_1s()
   }
 
   //====
-  // Keep-alive
+  // Keep-alive, drone will auto-land if it hears nothing for 15s
   //====
 
   if (state_socket_->receiving() && video_socket_->receiving() && !command_socket_->waiting() &&
-    now() - command_socket_->send_time() > rclcpp::Duration(10, 0)) {
-    // The drone will auto-land if it hears nothing for 15s
-    command_socket_->initiate_command("battery?", false);
+    now() - command_socket_->send_time() > rclcpp::Duration(KEEP_ALIVE, 0)) {
+    command_socket_->initiate_command("rc 0 0 0 0", false);
     return;
   }
 }
 
 } // namespace tello_driver
-
 
 int main(int argc, char **argv)
 {
@@ -129,6 +146,7 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
   rclcpp::Rate r(tello_driver::SPIN_RATE);
   auto node = std::make_shared<tello_driver::TelloDriver>();
+  auto result = rcutils_logging_set_logger_level(node->get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG);
 
   while (rclcpp::ok()) {
     // Do our work

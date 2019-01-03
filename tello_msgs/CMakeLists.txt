@@ -10,8 +10,8 @@ endif()
 if($ENV{CLION_IDE})
   message("Running inside CLion")
   find_package(fastrtps_cmake_module REQUIRED)
-  set(FastRTPS_INCLUDE_DIR "/opt/ros/bouncy/include")
-  set(FastRTPS_LIBRARY_RELEASE "/opt/ros/bouncy/lib/libfastrtps.so")
+  set(FastRTPS_INCLUDE_DIR "/opt/ros/crystal/include")
+  set(FastRTPS_LIBRARY_RELEASE "/opt/ros/crystal/lib/libfastrtps.so")
 endif()
 
 # Debugging: set _dump_all_variables to true
@@ -33,7 +33,7 @@ rosidl_generate_interfaces(
   tello_msgs
   "msg/FlightData.msg"
   "msg/TelloResponse.msg"
-  "srv/TelloCommand.srv"
+  "srv/TelloAction.srv"
 )
 
 ament_package()

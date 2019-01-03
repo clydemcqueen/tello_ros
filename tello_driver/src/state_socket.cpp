@@ -31,7 +31,9 @@ void StateSocket::process_packet(size_t r)
 
   // Unpack and publish
   if (driver_->count_subscribers(driver_->flight_data_pub_->get_topic_name()) > 0) {
+    tello_msgs::msg::FlightData msg;
     // TODO
+    driver_->flight_data_pub_->publish(msg);
   }
 }
 

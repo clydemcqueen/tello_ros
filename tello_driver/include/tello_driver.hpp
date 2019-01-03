@@ -8,7 +8,7 @@
 #include "std_msgs/msg/string.hpp"
 #include "tello_msgs/msg/flight_data.hpp"
 #include "tello_msgs/msg/tello_response.hpp"
-#include "tello_msgs/srv/tello_command.hpp"
+#include "tello_msgs/srv/tello_action.hpp"
 
 #include "h264decoder.hpp"
 
@@ -36,6 +36,11 @@ enum class SDK
 // rclcpp::Node::get_logger()
 // rclcpp::Publisher::get_topic_name()
 // rclcpp::Publisher::publish()
+//
+// FastRTPS also uses asio, and there's already an asio::io_service in the rclcpp::Node
+// process. This can cause a deadlock. We avoid this by pushing the asio calls to the
+// TelloSocket instances, which run in their own threads. See:
+// https://github.com/ros2/rmw_fastrtps/issues/176
 //=====================================================================================
 
 class TelloDriver : public rclcpp::Node
@@ -60,8 +65,10 @@ private:
 
   void command_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
-    const std::shared_ptr<tello_msgs::srv::TelloCommand::Request> request,
-    std::shared_ptr<tello_msgs::srv::TelloCommand::Response> response);
+    const std::shared_ptr<tello_msgs::srv::TelloAction::Request> request,
+    std::shared_ptr<tello_msgs::srv::TelloAction::Response> response);
+
+  void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
   // Sockets
   std::unique_ptr<CommandSocket> command_socket_;
@@ -69,7 +76,10 @@ private:
   std::unique_ptr<VideoSocket> video_socket_;
 
   // ROS services
-  rclcpp::Service<tello_msgs::srv::TelloCommand>::SharedPtr command_srv_;
+  rclcpp::Service<tello_msgs::srv::TelloAction>::SharedPtr command_srv_;
+
+  // ROS subscriptions
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
 };
 
 //=====================================================================================
@@ -171,6 +181,8 @@ private:
 
   H264Decoder decoder_;                     // Decodes h264
   ConverterRGB24 converter_;                // Converts pixels from YUV420P to BGR24
+
+  sensor_msgs::msg::CameraInfo camera_info_msg_;
 };
 
 } // namespace tello_driver

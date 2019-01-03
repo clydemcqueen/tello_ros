@@ -43,8 +43,15 @@ void emulator()
     std::string command(std::begin(buffer), std::begin(buffer) + length);
     std::cout << "Drone heard '" << command << "' from " << address << ":" << port << std::endl;
 
-    // Respond with an "ok"
-    command_socket.send_to(asio::buffer(std::string("ok")), sender_endpoint);
+    // Simulate a long command
+    if (command == "takeoff" || command == "land") {
+      sleep(5);
+    }
+
+    // Respond to all commands except "rc"
+    if (command.rfind("rc", 0) != 0) {
+      command_socket.send_to(asio::buffer(std::string("ok")), sender_endpoint);
+    }
 
     // If we heard "command" then start sending state messages
     if (!connected && command == "command")

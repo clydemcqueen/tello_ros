@@ -2,7 +2,9 @@
 
 namespace tello_driver {
 
-CommandSocket::CommandSocket(TelloDriver *driver) : TelloSocket(driver, 38065)
+CommandSocket::CommandSocket(TelloDriver *driver) :
+  TelloSocket(driver, 38065),
+  send_time_(rclcpp::Time(0L, RCL_ROS_TIME))
 {
   buffer_ = std::vector<unsigned char>(1024);
   listen();
@@ -34,14 +36,16 @@ void CommandSocket::initiate_command(std::string command, bool respond)
 {
   std::lock_guard<std::mutex> lock(mtx_);
 
-  if (waiting_) {
-    RCLCPP_ERROR(driver_->get_logger(), "Busy, dropping '%s'", command.c_str());
-  } else {
-    RCLCPP_INFO(driver_->get_logger(), "Sending '%s'...", command.c_str());
+  if (!waiting_) {
+    RCLCPP_DEBUG(driver_->get_logger(), "Sending '%s'...", command.c_str());
     socket_.send_to(asio::buffer(command), remote_endpoint_);
     send_time_ = driver_->now();
-    respond_ = respond;
-    waiting_ = true;
+
+    // Wait for a response for all commands except "rc"
+    if (command.rfind("rc", 0) != 0) {
+      respond_ = respond;
+      waiting_ = true;
+    }
   }
 }
 
@@ -68,7 +72,7 @@ void CommandSocket::process_packet(size_t r)
 
   std::string str = std::string(buffer_.begin(), buffer_.begin() + r);
   if (waiting_) {
-    RCLCPP_INFO(driver_->get_logger(), "Received '%s'", str.c_str());
+    RCLCPP_DEBUG(driver_->get_logger(), "Received '%s'", str.c_str());
     complete_command(str == "error" ? tello_msgs::msg::TelloResponse::ERROR : tello_msgs::msg::TelloResponse::OK, str);
   } else {
     RCLCPP_WARN(driver_->get_logger(), "Unexpected '%s'", str.c_str());

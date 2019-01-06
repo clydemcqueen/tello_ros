@@ -2,8 +2,9 @@
 
 namespace tello_driver {
 
-CommandSocket::CommandSocket(TelloDriver *driver) :
+CommandSocket::CommandSocket(TelloDriver *driver, std::string drone_ip) :
   TelloSocket(driver, 38065),
+  remote_endpoint_(asio::ip::address_v4::from_string(drone_ip), 8889),
   send_time_(rclcpp::Time(0L, RCL_ROS_TIME))
 {
   buffer_ = std::vector<unsigned char>(1024);

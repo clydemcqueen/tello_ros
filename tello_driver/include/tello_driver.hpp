@@ -40,7 +40,7 @@ class TelloDriver : public rclcpp::Node
 {
 public:
 
-  explicit TelloDriver();
+  explicit TelloDriver(std::string drone_ip);
 
   ~TelloDriver();
 
@@ -113,7 +113,7 @@ class CommandSocket : public TelloSocket
 {
 public:
 
-  CommandSocket(TelloDriver *driver);
+  CommandSocket(TelloDriver *driver, std::string drone_ip);
 
   void timeout() override;
   bool waiting();
@@ -125,12 +125,8 @@ private:
   void process_packet(size_t r) override;
   void complete_command(uint8_t rc, std::string str);
 
-#undef LOCAL_EMULATION
-#ifdef LOCAL_EMULATION
-  udp::endpoint remote_endpoint_{udp::v4(), 8889};
-#else
-  udp::endpoint remote_endpoint_{asio::ip::address_v4::from_string("192.168.10.1"), 8889};
-#endif
+  udp::endpoint remote_endpoint_;
+
   rclcpp::Time send_time_;  // Time of most recent send
   bool respond_;            // Send response on tello_response_pub_
   bool waiting_ = false;    // Are we waiting for a response?

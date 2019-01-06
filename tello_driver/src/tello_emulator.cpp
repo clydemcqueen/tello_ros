@@ -102,6 +102,7 @@ int main(int argc, char* argv[])
 {
   try
   {
+    std::cout << "Emulator running on 127.0.0.1" << std::endl;
     emulator(false);
   }
   catch (std::exception& e)

@@ -40,7 +40,7 @@ class TelloDriver : public rclcpp::Node
 {
 public:
 
-  explicit TelloDriver(std::string drone_ip);
+  explicit TelloDriver();
 
   ~TelloDriver();
 
@@ -113,7 +113,7 @@ class CommandSocket : public TelloSocket
 {
 public:
 
-  CommandSocket(TelloDriver *driver, std::string drone_ip);
+  CommandSocket(TelloDriver *driver, std::string drone_ip, unsigned short drone_port, unsigned short command_port);
 
   void timeout() override;
   bool waiting();
@@ -140,7 +140,7 @@ class StateSocket : public TelloSocket
 {
 public:
 
-  StateSocket(TelloDriver *driver);
+  StateSocket(TelloDriver *driver, unsigned short data_port);
 
 private:
 
@@ -157,7 +157,7 @@ class VideoSocket : public TelloSocket
 {
 public:
 
-  VideoSocket(TelloDriver *driver);
+  VideoSocket(TelloDriver *driver, unsigned short video_port);
 
 private:
 

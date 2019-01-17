@@ -9,7 +9,7 @@ namespace tello_driver {
 // * some future SDK version might introduce new field types, so don't parse undocumented fields
 // * send the raw string as well
 
-StateSocket::StateSocket(TelloDriver *driver) : TelloSocket(driver, 8890)
+StateSocket::StateSocket(TelloDriver *driver, unsigned short data_port) : TelloSocket(driver, data_port)
 {
   buffer_ = std::vector<unsigned char>(1024);
   listen();

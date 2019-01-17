@@ -15,7 +15,7 @@ namespace tello_driver {
 // -- the h264 parser will consume the 8-byte packet, the 13-byte packet and the entire keyframe without
 //    generating a frame. Presumably the keyframe is stored in the parser and referenced later.
 
-VideoSocket::VideoSocket(TelloDriver *driver) : TelloSocket(driver, 11111)
+VideoSocket::VideoSocket(TelloDriver *driver, unsigned short video_port) : TelloSocket(driver, video_port)
 {
   if (!get_camera_info(camera_info_msg_)) {
     RCLCPP_ERROR(driver_->get_logger(), "Cannot get camera info");

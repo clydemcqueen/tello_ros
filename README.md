@@ -68,6 +68,18 @@ The driver sends a `rc 0 0 0 0` command after 12 seconds of silence to avoid thi
 * `~image_raw` [sensor_msgs/Image](http://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
 * `~camera_info` [sensor_msgs/CameraInfo](http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
 
+### Parameters
+
+The defaults work well for a single Tello drone.
+
+ Name         |  Description |  Default
+--------------|--------------|----------
+`drone_ip`    | Send commands to this IP address |  `192.168.10.1`
+`drone_port`  | Send commands to this UDP port | `8889`
+`command_port`| Send commands from this UDP port | `38065`
+`data_port`   | Flight data (Tello state) will arrive on this UDP port  | `8890`
+`video_port`  | Video data will arrive on this UDP port |  `11111`
+
 ## Installation
 
 ### 1. Set up your Linux environment

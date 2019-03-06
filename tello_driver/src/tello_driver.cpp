@@ -10,7 +10,7 @@ constexpr int32_t VIDEO_TIMEOUT = 4;      // We stopped receiving video
 constexpr int32_t KEEP_ALIVE = 12;        // We stopped receiving input from other ROS nodes
 constexpr int32_t COMMAND_TIMEOUT = 9;    // Drone didn't respond to a command
 
-TelloDriver::TelloDriver(std::string drone_ip) : Node("tello_driver")
+TelloDriver::TelloDriver() : Node("tello_driver")
 {
   // ROS publishers
   image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", 1);
@@ -27,12 +27,29 @@ TelloDriver::TelloDriver(std::string drone_ip) : Node("tello_driver")
   cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>("cmd_vel",
     std::bind(&TelloDriver::cmd_vel_callback, this, std::placeholders::_1));
 
-  // Sockets
-  command_socket_ = std::make_unique<CommandSocket>(this, drone_ip);
-  state_socket_ = std::make_unique<StateSocket>(this);
-  video_socket_ = std::make_unique<VideoSocket>(this);
+  // Parameters
+  std::string drone_ip;
+  int drone_port;
+  int command_port;
+  int data_port;
+  int video_port;
 
-  RCLCPP_INFO(get_logger(), "Looking for drone at %s", drone_ip.c_str());
+  get_parameter_or("drone_ip", drone_ip, std::string("192.168.10.1"));
+  get_parameter_or("drone_port", drone_port, 8889);
+
+  get_parameter_or("command_port", command_port, 38065);
+  get_parameter_or("data_port", data_port, 8890);
+  get_parameter_or("video_port", video_port, 11111);
+
+  RCLCPP_INFO(get_logger(), "Drone at %s:%d", drone_ip.c_str(), drone_port);
+  RCLCPP_INFO(get_logger(), "Listening for command responses on localhost:%d", command_port);
+  RCLCPP_INFO(get_logger(), "Listening for data on localhost:%d", data_port);
+  RCLCPP_INFO(get_logger(), "Listening for video on localhost:%d", video_port);
+
+  // Sockets
+  command_socket_ = std::make_unique<CommandSocket>(this, drone_ip, drone_port, command_port);
+  state_socket_ = std::make_unique<StateSocket>(this, data_port);
+  video_socket_ = std::make_unique<VideoSocket>(this, video_port);
 }
 
 TelloDriver::~TelloDriver()
@@ -145,12 +162,9 @@ int main(int argc, char **argv)
   // Force flush of the stdout buffer
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  // Get remote ip addr from command line
-  std::string drone_ip(argc > 1 ? argv[1] : "192.168.10.1");
-
   rclcpp::init(argc, argv);
   rclcpp::Rate r(tello_driver::SPIN_RATE);
-  auto node = std::make_shared<tello_driver::TelloDriver>(drone_ip);
+  auto node = std::make_shared<tello_driver::TelloDriver>();
   auto result = rcutils_logging_set_logger_level(node->get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG);
 
   while (rclcpp::ok()) {

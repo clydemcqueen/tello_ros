@@ -4,8 +4,6 @@
 #include "cv_bridge/cv_bridge.h"
 #include "geometry_msgs/msg/twist.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
-#include "std_msgs/msg/empty.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "tello_msgs/msg/flight_data.hpp"
 #include "tello_msgs/msg/tello_response.hpp"
 #include "tello_msgs/srv/tello_action.hpp"

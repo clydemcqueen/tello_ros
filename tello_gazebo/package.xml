@@ -19,6 +19,7 @@
 
   <depend>gazebo</depend>
   <depend>gazebo_ros</depend>
+  <depend>geometry_msgs</depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>tello_msgs</depend>

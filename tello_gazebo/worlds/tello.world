@@ -26,6 +26,8 @@
       </link>
 
       <plugin name="TelloPlugin" filename="libTelloPlugin.so">
+        <ns>tello</ns>
+        <link_name>base_link</link_name>
         <center_of_mass>0 0 0</center_of_mass>
       </plugin>
 

@@ -12,4 +12,6 @@ def generate_launch_description():
     world = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'tello.world')
     return LaunchDescription([
         ExecuteProcess(cmd=['gazebo', '--verbose', world], output='screen'),
+        Node(package='joy', node_executable='joy_node', output='screen'),
+        Node(package='tello_driver', node_executable='tello_joy', output='screen'),
     ])

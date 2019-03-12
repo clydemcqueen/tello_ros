@@ -35,6 +35,7 @@ find_package(tello_msgs REQUIRED)
 
 # Local includes
 include_directories(
+  include
   ${gazebo_ros_INCLUDE_DIRS}
   ${geometry_msgs_INCLUDE_DIRS}
   ${std_msgs_INCLUDE_DIRS}

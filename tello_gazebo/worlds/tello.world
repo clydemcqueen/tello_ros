@@ -2,56 +2,25 @@
 
 <sdf version="1.6">
   <world name="default">
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
-    <include>
-      <uri>model://sun</uri>
-    </include>
 
+    <!-- Turn gravity off -->
+    <gravity>0 0 0</gravity>
+
+    <!-- Tweak to run at higher or lower speeds -->
     <physics name="normal" type="ode">
       <real_time_update_rate>1000</real_time_update_rate>
       <max_step_size>0.001</max_step_size>
     </physics>
 
-    <model name="tello">
-      <pose>0 0 1 0 0 0</pose>
-      <link name="base_link">
-        <gravity>0</gravity>  <!-- No gravity -->
-        <inertial>
-          <inertia>  <!-- Solid cuboid 18cm x 18cm x 5cm high -->
-            <ixx>0.000290833</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>0.00054</iyy>
-            <iyz>0</iyz>
-            <izz>0.000290833</izz>
-          </inertia>
-          <mass>0.1</mass>
-        </inertial>
-        <collision name="collision">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.18 0.18 0.05</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.18 0.18 0.05</size>
-            </box>
-          </geometry>
-        </visual>
-      </link>
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
 
-      <plugin name="TelloPlugin" filename="libTelloPlugin.so">
-        <link_name>base_link</link_name>
-        <center_of_mass>0 0 0</center_of_mass>
-      </plugin>
+    <!-- Lighting -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
 
-    </model>
   </world>
 </sdf>

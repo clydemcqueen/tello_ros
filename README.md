@@ -4,9 +4,11 @@
 
 ## Packages
 
-There are 2 ROS packages:
+There are 4 ROS packages:
 * `tello_driver` is a C++ ROS node that connects to the drone
 * `tello_msgs` is a set of ROS messages
+* `tello_description` contains a robot description file
+* `tello_gazebo` can be used to simulate a drone in Gazebo
 
 ## Interface
 

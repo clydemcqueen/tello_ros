@@ -15,6 +15,8 @@ using namespace std::chrono_literals;
 
 namespace tello_gazebo {
 
+const bool DEBUG = false;
+
 const double MAX_XY_V = 8.0;
 const double MAX_Z_V = 4.0;
 const double MAX_ANG_V = M_PI;
@@ -143,7 +145,7 @@ public:
     static int count = 0;
     bool debug = false;
     if (++count > 100) {
-      debug = true;
+      debug = DEBUG;
       count = 0;
     }
 

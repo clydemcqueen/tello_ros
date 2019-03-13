@@ -79,6 +79,12 @@ install(
   DESTINATION share/tello_gazebo
 )
 
+## Install Python node(s)
+install(
+  PROGRAMS src/inject_entity.py
+  DESTINATION lib/tello_gazebo
+)
+
 #=============
 # Run ament macros
 #=============

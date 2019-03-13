@@ -1,4 +1,4 @@
-"""Launch a simulation"""
+"""Simulate a Tello drone"""
 
 import os
 
@@ -9,9 +9,19 @@ from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
-    world = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'tello.world')
+    world_path = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'tello.world')
+    urdf_path = os.path.join(get_package_share_directory('tello_description'), 'urdf', 'tello.urdf')
+
     return LaunchDescription([
-        ExecuteProcess(cmd=['gazebo', '--verbose', world], output='screen'),
+        # Launch Gazebo, loading tello.world
+        ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_factory.so', world_path], output='screen'),
+
+        # Spawn tello.urdf
+        Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen', arguments=[urdf_path, '2']),
+
+        # Fire up a joystick
         Node(package='joy', node_executable='joy_node', output='screen'),
+
+        # Very simple joystick driver, will map /joy messages to /cmd_vel, etc.
         Node(package='tello_driver', node_executable='tello_joy', output='screen'),
     ])

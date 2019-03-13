@@ -4,7 +4,7 @@ project(tello_description)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY launch urdf
+  DIRECTORY urdf
   DESTINATION share/tello_description
 )
 

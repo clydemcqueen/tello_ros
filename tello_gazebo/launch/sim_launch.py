@@ -17,7 +17,12 @@ def generate_launch_description():
         ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_factory.so', world_path], output='screen'),
 
         # Spawn tello.urdf
-        Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen', arguments=[urdf_path, '2']),
+        Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen',
+             arguments=[urdf_path, '2']),
+
+        # Publish static transforms
+        Node(package='robot_state_publisher', node_executable='robot_state_publisher', output='screen',
+             arguments=[urdf_path]),
 
         # Fire up a joystick
         Node(package='joy', node_executable='joy_node', output='screen'),

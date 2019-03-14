@@ -75,7 +75,7 @@ install(
 
 ## Install world and launch files
 install(
-  DIRECTORY worlds launch
+  DIRECTORY models worlds launch
   DESTINATION share/tello_gazebo
 )
 

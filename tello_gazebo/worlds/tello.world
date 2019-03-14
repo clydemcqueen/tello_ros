@@ -22,5 +22,63 @@
       <uri>model://sun</uri>
     </include>
 
+    <!-- ArUco markers -->
+    <model name="marker0">
+      <include>
+        <static>true</static>
+        <uri>model://marker_0_pad</uri>
+      </include>
+      <pose>2 0 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker1">
+      <include>
+        <static>true</static>
+        <uri>model://marker_1_pad</uri>
+      </include>
+      <pose>2 1 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker2">
+      <include>
+        <static>true</static>
+        <uri>model://marker_2_pad</uri>
+      </include>
+      <pose>2 2 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker3">
+      <include>
+        <static>true</static>
+        <uri>model://marker_3_pad</uri>
+      </include>
+      <pose>2 3 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker4">
+      <include>
+        <static>true</static>
+        <uri>model://marker_4_pad</uri>
+      </include>
+      <pose>2 0 1.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker5">
+      <include>
+        <static>true</static>
+        <uri>model://marker_5_pad</uri>
+      </include>
+      <pose>2 1 1.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker6">
+      <include>
+        <static>true</static>
+        <uri>model://marker_6_pad</uri>
+      </include>
+      <pose>2 2 1.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker7">
+      <include>
+        <static>true</static>
+        <uri>model://marker_7_pad</uri>
+      </include>
+      <pose>2 3 1.5 0 -1.57 0</pose>
+    </model>
+
   </world>
 </sdf>

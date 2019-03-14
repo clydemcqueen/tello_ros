@@ -1,0 +1,13 @@
+material ArucoVisualMarker4/Num
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture aruco_mark_4_num.png
+			}
+		}
+	}
+}

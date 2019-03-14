@@ -13,7 +13,7 @@ Running a simulation:
     cd ~/tello_ros_ws
     source /opt/ros/crystal/setup.bash
     source install/setup.bash
-    export GAZEBO_MODEL_PATH=~/tello_ros_ws/install/tello_gazebo/share/tello_gazebo/models
+    export GAZEBO_MODEL_PATH=${PWD}/install/tello_gazebo/share/tello_gazebo/models
     ros2 launch tello_gazebo sim_launch.py
 
 If you run into a dynamic linking problem ("libCameraPlugin.so: cannot open shared object file...") try this workaround:
@@ -25,6 +25,6 @@ If you run into a dynamic linking problem ("libCameraPlugin.so: cannot open shar
     cd ~/tello_ros_ws
     colcon build --event-handlers console_direct+
     source install/setup.bash
-    export GAZEBO_PLUGIN_PATH=install/gazebo_plugins/lib
+    export GAZEBO_PLUGIN_PATH=${PWD}/install/gazebo_plugins/lib
     cp /usr/lib/x86_64-linux-gnu/gazebo-9/plugins/* install/gazebo_plugins/lib
     ros2 launch tello_gazebo sim_launch.py

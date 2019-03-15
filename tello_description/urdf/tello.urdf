@@ -86,8 +86,9 @@
 
   <!-- Camera plugin for Gazebo -->
   <!-- TODO use Tello camera specs -->
+  <!-- TODO add another joint and rotate the camera into place -->
   <gazebo reference="camera_link">
-    <sensor type="camera" name="camera1">
+    <sensor type="camera" name="solo">
       <update_rate>30.0</update_rate>
       <camera name="head">
         <horizontal_fov>1.3962634</horizontal_fov>
@@ -112,7 +113,7 @@
       <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
-        <cameraName>tello/camera1</cameraName>
+        <cameraName>this_is_ignored</cameraName>
         <imageTopicName>image_raw</imageTopicName>
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
         <frameName>camera_link</frameName>

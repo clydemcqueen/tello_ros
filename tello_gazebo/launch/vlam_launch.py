@@ -1,4 +1,4 @@
-"""Simulate a Tello drone"""
+"""Simulate a Tello drone, using ArUco markers and fiducial_vlam for localization"""
 
 import os
 
@@ -9,7 +9,8 @@ from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
-    world_path = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'tello.world')
+    ns = 'solo'
+    world_path = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'aruco.world')
     urdf_path = os.path.join(get_package_share_directory('tello_description'), 'urdf', 'tello.urdf')
 
     return LaunchDescription([
@@ -29,4 +30,17 @@ def generate_launch_description():
 
         # Very simple joystick driver, will map /joy messages to /cmd_vel, etc.
         Node(package='tello_driver', node_executable='tello_joy', output='screen'),
+
+        # Build a map using ArUco markers
+        Node(package='fiducial_vlam', node_executable='vmap_node', output='screen'),
+
+        # Localize against the map
+        Node(package='fiducial_vlam', node_executable='vloc_node', output='screen',
+             node_name='vloc_node', node_namespace=ns, parameters=[{
+                'publish_tfs': 0,
+                'camera_frame_id': 'camera_frame'}]),
+
+        # Kalman filter
+        Node(package='flock2', node_executable='filter_node', output='screen',
+             node_name='filter_node', node_namespace=ns),
     ])

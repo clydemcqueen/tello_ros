@@ -1,4 +1,4 @@
-## Running a simulation in Gazebo (WIP)
+## Running a simulation in Gazebo (WIP -- only on the "gazebo" branch)
 
 Install Gazebo v9:
 

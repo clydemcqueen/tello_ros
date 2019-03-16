@@ -32,7 +32,8 @@ def generate_launch_description():
         Node(package='tello_driver', node_executable='tello_joy', output='screen'),
 
         # Build a map using ArUco markers
-        Node(package='fiducial_vlam', node_executable='vmap_node', output='screen'),
+        Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',
+             node_name='vloc_node', parameters=[{'marker_length': 0.1778}]),
 
         # Localize against the map
         Node(package='fiducial_vlam', node_executable='vloc_node', output='screen',

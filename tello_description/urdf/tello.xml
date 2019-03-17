@@ -3,7 +3,7 @@
 <!-- Body coordinates are: x forward, y left, z up; rotation is: roll right, pitch forward, yaw left -->
 <!-- See http://www.ros.org/reps/rep-0103.html -->
 
-<robot name="tello_${index}">
+<robot name="tello${suffix}">
 
   <!-- Materials -->
   <material name="gray"><color rgba="0.5 0.5 0.5 1.0"/></material>
@@ -12,7 +12,7 @@
   <!-- TODO add Gazebo color information -->
 
   <!-- Base link -->
-  <link name="base_link_${index}">
+  <link name="base_link${suffix}">
     <visual>
       <origin xyz="0 0 0.01"/>
       <geometry><box size="0.07 0.02 0.02"/></geometry>
@@ -54,7 +54,7 @@
   </link>
 
   <!-- Camera link -->
-  <link name="camera_link_${index}">
+  <link name="camera_link${suffix}">
     <visual>
       <origin xyz="0 0 0"/>
       <geometry><sphere radius="0.01"/></geometry>
@@ -70,16 +70,16 @@
   </link>
 
   <!-- Fixed joint -->
-  <joint name="camera_joint_${index}" type="fixed">
+  <joint name="camera_joint${suffix}" type="fixed">
     <origin xyz="0.035 0 0" rpy="0 0 0"/>  <!-- TODO fix origin -->
-    <parent link="base_link_${index}"/>
-    <child link="camera_link_${index}"/>
+    <parent link="base_link${suffix}"/>
+    <child link="camera_link${suffix}"/>
   </joint>
 
   <!-- Tello plugin for Gazebo -->
   <gazebo>
     <plugin name="TelloPlugin" filename="libTelloPlugin.so">
-      <link_name>base_link_${index}</link_name>
+      <link_name>base_link${suffix}</link_name>
       <center_of_mass>0 0 0</center_of_mass>
     </plugin>
   </gazebo>
@@ -87,7 +87,7 @@
   <!-- Camera plugin for Gazebo -->
   <!-- TODO use Tello camera specs -->
   <!-- TODO add another joint and rotate the camera into place -->
-  <gazebo reference="camera_link_${index}">
+  <gazebo reference="camera_link${suffix}">
     <sensor type="camera" name="solo">
       <update_rate>30.0</update_rate>
       <camera name="head">  <!-- TODO does this name do anything? -->
@@ -110,13 +110,13 @@
           <stddev>0.007</stddev>
         </noise>
       </camera>
-      <plugin name="camera_controller_${index}" filename="libgazebo_ros_camera.so">
+      <plugin name="camera_controller${suffix}" filename="libgazebo_ros_camera.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <cameraName>this_is_ignored</cameraName>
         <imageTopicName>image_raw</imageTopicName>
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-        <frameName>camera_link_${index}</frameName>
+        <frameName>camera_link${suffix}</frameName>
         <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
         <distortionK2>0.0</distortionK2>

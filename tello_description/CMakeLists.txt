@@ -11,17 +11,22 @@ find_package(ament_cmake REQUIRED)
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/urdf")
 
-foreach(INDEX RANGE 1 8)
-  set(URDF_FILE "${CMAKE_CURRENT_BINARY_DIR}/urdf/tello${INDEX}.urdf")
+foreach(INDEX RANGE 0 8)
+  if(${INDEX} EQUAL 0)
+    set(SUFFIX "")
+  else()
+    set(SUFFIX "_${INDEX}")
+  endif()
+  set(URDF_FILE "${CMAKE_CURRENT_BINARY_DIR}/urdf/tello${SUFFIX}.urdf")
   message("creating rules for ${URDF_FILE}")
   add_custom_command(
     OUTPUT ${URDF_FILE}
-    COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/src/replace.py" "${CMAKE_CURRENT_SOURCE_DIR}/urdf/tello.xml" index=${INDEX} > ${URDF_FILE}
+    COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/src/replace.py" "${CMAKE_CURRENT_SOURCE_DIR}/urdf/tello.xml" suffix=${SUFFIX} > ${URDF_FILE}
     DEPENDS urdf/tello.xml
     COMMENT "Generate ${URDF_FILE}"
     VERBATIM
   )
-  add_custom_target(generate_urdf${INDEX} ALL DEPENDS ${URDF_FILE})
+  add_custom_target(generate_urdf${SUFFIX} ALL DEPENDS ${URDF_FILE})
 endforeach()
 
 #=============

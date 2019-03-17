@@ -36,8 +36,8 @@ def generate_launch_description():
         Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',
              node_name='vloc_node', parameters=[{
                 'marker_length': 0.1778,                        # Marker length
-                'marker_map_load_full_filename': map_path,      # Load a pre-built map
-                'make_not_use_map': 0}]),                       # Don't modify the map
+                'marker_map_load_full_filename': map_path,      # Load a pre-built map from disk
+                'make_not_use_map': 0}]),                       # Don't save a map to disk
 
         # Localize against the map
         Node(package='fiducial_vlam', node_executable='vloc_node', output='screen',

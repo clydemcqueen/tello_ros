@@ -10,7 +10,8 @@ from launch.actions import ExecuteProcess
 
 def generate_launch_description():
     ns = 'solo'
-    world_path = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'aruco.world')
+    world_path = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'fiducial.world')
+    map_path = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'fiducial_map.yaml')
     urdf_path = os.path.join(get_package_share_directory('tello_description'), 'urdf', 'tello.urdf')
 
     return LaunchDescription([
@@ -31,9 +32,12 @@ def generate_launch_description():
         # Very simple joystick driver, will map /joy messages to /cmd_vel, etc.
         Node(package='tello_driver', node_executable='tello_joy', output='screen'),
 
-        # Build a map using ArUco markers
+        # Load and publish a known map
         Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',
-             node_name='vloc_node', parameters=[{'marker_length': 0.1778}]),
+             node_name='vloc_node', parameters=[{
+                'marker_length': 0.1778,                        # Marker length
+                'marker_map_load_full_filename': map_path,      # Load a pre-built map
+                'make_not_use_map': 0}]),                       # Don't modify the map
 
         # Localize against the map
         Node(package='fiducial_vlam', node_executable='vloc_node', output='screen',

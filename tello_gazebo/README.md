@@ -8,13 +8,17 @@ Install these additional ROS packages:
 
     sudo apt install ros-crystal-gazebo-ros-pkgs ros-crystal-cv-bridge
 
-Running a simulation:
+Run a teleop simulation:
 
     cd ~/tello_ros_ws
     source /opt/ros/crystal/setup.bash
     source install/setup.bash
     export GAZEBO_MODEL_PATH=${PWD}/install/tello_gazebo/share/tello_gazebo/models
     ros2 launch tello_gazebo simple_launch.py
+
+If you run into the "No namespace found" error re-set `GAZEBO_MODEL_PATH`:
+
+    export GAZEBO_MODEL_PATH=${PWD}/install/tello_gazebo/share/tello_gazebo/models
 
 If you run into a dynamic linking problem ("libCameraPlugin.so: cannot open shared object file...") try this workaround:
 
@@ -29,7 +33,7 @@ If you run into a dynamic linking problem ("libCameraPlugin.so: cannot open shar
     cp /usr/lib/x86_64-linux-gnu/gazebo-9/plugins/* install/gazebo_plugins/lib
     ros2 launch tello_gazebo simple_launch.py
     
-Integrating with `fiducial_vlam`:
+Integrate with `fiducial_vlam`:
 
     cd ~/tello_ros_ws/src
     git clone https://github.com/ptrmu/fiducial_vlam.git
@@ -37,4 +41,4 @@ Integrating with `fiducial_vlam`:
     cd ..      
     colcon build --event-handlers console_direct+
     source install/setup.bash
-    ros2 launch tello_gazebo aruco_launch.py
+    ros2 launch tello_gazebo vlam_launch.py

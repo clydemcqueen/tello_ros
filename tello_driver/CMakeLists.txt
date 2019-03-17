@@ -110,7 +110,7 @@ install(
   tello_driver
   tello_emulator
   tello_joy
-  DESTINATION lib/tello_driver
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install various directories
@@ -118,7 +118,7 @@ install(
   DIRECTORY
   cfg
   launch
-  DESTINATION share/tello_driver
+  DESTINATION share/${PROJECT_NAME}
 )
 
 #=============

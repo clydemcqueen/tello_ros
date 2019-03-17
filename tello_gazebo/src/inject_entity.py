@@ -2,7 +2,6 @@
 
 """Inject an SDF or URDF file into Gazebo"""
 
-
 import sys
 
 import rclpy

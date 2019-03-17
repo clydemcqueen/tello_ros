@@ -3,9 +3,38 @@ project(tello_description)
 
 find_package(ament_cmake REQUIRED)
 
+#=============
+# Generate N urdf files, each with unique robot and frame names
+# Source file is in ${CMAKE_CURRENT_SOURCE_DIR}/urdf/tello.xml
+# Generated files are in ${CMAKE_CURRENT_BINARY_DIR}/urdf/telloX.urdf
+#=============
+
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/urdf")
+
+foreach(INDEX RANGE 1 8)
+  set(URDF_FILE "${CMAKE_CURRENT_BINARY_DIR}/urdf/tello${INDEX}.urdf")
+  message("creating rules for ${URDF_FILE}")
+  add_custom_command(
+    OUTPUT ${URDF_FILE}
+    COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/src/replace.py" "${CMAKE_CURRENT_SOURCE_DIR}/urdf/tello.xml" index=${INDEX} > ${URDF_FILE}
+    DEPENDS urdf/tello.xml
+    COMMENT "Generate ${URDF_FILE}"
+    VERBATIM
+  )
+  add_custom_target(generate_urdf${INDEX} ALL DEPENDS ${URDF_FILE})
+endforeach()
+
+#=============
+# Install
+#=============
+
 install(
-  DIRECTORY urdf
-  DESTINATION share/tello_description
+  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/urdf"
+  DESTINATION share/${PROJECT_NAME}
 )
+
+#=============
+# Run ament macros
+#=============
 
 ament_package()

@@ -31,7 +31,7 @@ find_package(std_msgs REQUIRED)
 
 # Generate ROS interfaces
 rosidl_generate_interfaces(
-  tello_msgs
+  ${PROJECT_NAME}
   "msg/FlightData.msg"
   "msg/TelloResponse.msg"
   "srv/TelloAction.srv"

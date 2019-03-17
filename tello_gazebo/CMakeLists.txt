@@ -76,13 +76,13 @@ install(
 ## Install world and launch files
 install(
   DIRECTORY models worlds launch
-  DESTINATION share/tello_gazebo
+  DESTINATION share/${PROJECT_NAME}
 )
 
-## Install Python node(s)
+## Install Python scripts
 install(
   PROGRAMS src/inject_entity.py
-  DESTINATION lib/tello_gazebo
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 #=============

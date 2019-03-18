@@ -22,10 +22,6 @@ def generate_launch_description():
         Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen',
              arguments=[urdf_path, '1']),
 
-        # Publish static transforms
-        Node(package='robot_state_publisher', node_executable='robot_state_publisher', output='screen',
-             arguments=[urdf_path]),
-
         # Fire up a joystick
         Node(package='joy', node_executable='joy_node', output='screen'),
 
@@ -34,7 +30,7 @@ def generate_launch_description():
 
         # Load and publish a known map
         Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',
-             node_name='vloc_node', parameters=[{
+             node_name='vmap_node', parameters=[{
                 'marker_length': 0.1778,                        # Marker length
                 'marker_map_load_full_filename': map_path,      # Load a pre-built map from disk
                 'make_not_use_map': 0}]),                       # Don't save a map to disk
@@ -42,10 +38,13 @@ def generate_launch_description():
         # Localize against the map
         Node(package='fiducial_vlam', node_executable='vloc_node', output='screen',
              node_name='vloc_node', node_namespace=ns, parameters=[{
-                'publish_tfs': 0,
-                'camera_frame_id': 'camera_frame'}]),
-
-        # Kalman filter
-        Node(package='flock2', node_executable='filter_node', output='screen',
-             node_name='filter_node', node_namespace=ns),
+                'publish_tfs': 1,
+                'base_frame_id': 'base_link',
+                'map_init_pose_x': 0.035,
+                'map_init_pose_y': 0.0,
+                'map_init_pose_z': 0.0,
+                'map_init_pose_roll': 0.785402,
+                'map_init_pose_pitch': -1.57079,
+                'map_init_pose_yaw': 0.785402,
+                'camera_frame_id': 'camera_link'}]),
     ])

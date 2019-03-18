@@ -35,13 +35,15 @@ def inject(xml: str, initial_pose: Pose):
     rclpy.shutdown()
 
 
-if len(sys.argv) < 3:
-    print('usage: ros2 run tello_gazebo inject_entity.py -- foo.urdf initial_z')
+if len(sys.argv) < 5:
+    print('usage: ros2 run tello_gazebo inject_entity.py -- foo.urdf initial_x initial_y initial_z')
     sys.exit(1)
 
 f = open(sys.argv[1], 'r')
 
 p = Pose()
-p.position.z = float(sys.argv[2])
+p.position.x = float(sys.argv[2])
+p.position.y = float(sys.argv[3])
+p.position.z = float(sys.argv[4])
 
 inject(f.read(), p)

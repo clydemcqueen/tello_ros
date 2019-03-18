@@ -79,6 +79,7 @@
   <!-- Tello plugin for Gazebo -->
   <gazebo>
     <plugin name="TelloPlugin" filename="libTelloPlugin.so">
+      <ns>${topic_ns}</ns>
       <link_name>base_link${suffix}</link_name>
       <center_of_mass>0 0 0</center_of_mass>
     </plugin>
@@ -88,7 +89,7 @@
   <!-- TODO use Tello camera specs -->
   <!-- TODO add another joint and rotate the camera into place -->
   <gazebo reference="camera_link${suffix}">
-    <sensor type="camera" name="solo">
+    <sensor type="camera" name="${topic_ns}">
       <update_rate>30.0</update_rate>
       <camera name="head">  <!-- TODO does this name do anything? -->
         <horizontal_fov>1.3962634</horizontal_fov>

@@ -76,6 +76,7 @@ void TelloDriver::command_callback(
 
 void TelloDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
+  // TODO cmd_vel should specify velocity, not joystick position
   if (!command_socket_->waiting()) {
     std::ostringstream rc;
     rc << "rc " << static_cast<int>(round(msg->linear.y * -100))

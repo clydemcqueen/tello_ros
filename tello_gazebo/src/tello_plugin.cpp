@@ -13,6 +13,23 @@
 
 using namespace std::chrono_literals;
 
+//===============================================================================================
+// TelloPlugin features:
+// -- generates trivial flight data at 10Hz
+// -- video is managed by a gazebo_ros_pkgs plugin, see tello_description/urdf/tello.xml
+// -- responds to "takeoff" and "land" commands
+// -- responds to cmd_vel and "rc x y z yaw" commands
+//
+// Tello flight dynamics are sophisticated and difficult to model. TelloPlugin keeps it simple:
+// -- x, y, z and yaw velocities are controlled by a P controller
+// -- roll and pitch are always 0
+//
+// Possible extensions:
+// -- simulate battery use and a low battery state
+// -- simulate network latency
+// -- add some randomness to the flight dynamics
+//===============================================================================================
+
 namespace tello_gazebo {
 
 const double MAX_XY_V = 8.0;
@@ -104,6 +121,39 @@ public:
   {
   }
 
+  void set_target_velocities(double x, double y, double z, double yaw)
+  {
+    x_controller_.set_target(x);
+    y_controller_.set_target(y);
+    z_controller_.set_target(z);
+    yaw_controller_.set_target(yaw);
+  }
+
+  // Respond to a command of the form "rc x y z yaw"
+  void set_target_velocities(std::string rc_command)
+  {
+    double x, y, z, yaw;
+
+    try {
+      std::istringstream iss(rc_command, std::istringstream::in);
+      std::string s;
+      iss >> s; // "rc"
+      iss >> s; x = std::stof(s);
+      iss >> s; y = std::stof(s);
+      iss >> s; z = std::stof(s);
+      iss >> s; yaw = std::stof(s);
+    } catch (std::exception e) {
+      RCLCPP_ERROR(node_->get_logger(), "can't parse rc command '%s', exception %s", rc_command.c_str(), e.what());
+      return;
+    }
+
+    set_target_velocities(
+      x * MAX_XY_V,
+      y * MAX_XY_V,
+      z * MAX_Z_V,
+      yaw * MAX_ANG_V);
+  }
+
   void transition(FlightState next)
   {
     if (node_ != nullptr) {
@@ -117,18 +167,15 @@ public:
       case FlightState::landing:
       case FlightState::landed:
         // Apply a downward force while landing, and when on the ground
-        x_controller_.set_target(0);
-        y_controller_.set_target(0);
-        z_controller_.set_target(LAND_Z_V);
-        yaw_controller_.set_target(0);
+        set_target_velocities(0, 0, LAND_Z_V, 0);
         break;
 
       case FlightState::taking_off:
-        z_controller_.set_target(TAKEOFF_Z_V);
+        set_target_velocities(0, 0, TAKEOFF_Z_V, 0);
         break;
 
       case FlightState::flying:
-        z_controller_.set_target(0);
+        set_target_velocities(0, 0, 0, 0);
         break;
     }
   }
@@ -225,6 +272,11 @@ public:
     base_link_->AddRelativeTorque(torque); // ODE adds torque at the center of mass
   }
 
+  bool is_prefix(const std::string &prefix, const std::string &str)
+  {
+    return std::equal(prefix.begin(), prefix.end(), str.begin());
+  }
+
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "UnusedValue"
   void command_callback(
@@ -234,13 +286,16 @@ public:
   {
     if (request->cmd == "takeoff" && flight_state_ == FlightState::landed) {
       transition(FlightState::taking_off);
-      response->rc = tello_msgs::srv::TelloAction::Response::OK;
+      response->rc = response->OK;
     } else if (request->cmd == "land" && flight_state_ == FlightState::flying) {
       transition(FlightState::landing);
-      response->rc = tello_msgs::srv::TelloAction::Response::OK;
+      response->rc = response->OK;
+    } else if (is_prefix("rc", request->cmd) && flight_state_ == FlightState::flying) {
+      set_target_velocities(request->cmd);
+      response->rc = response->OK;
     } else {
       RCLCPP_ERROR(node_->get_logger(), "ignoring command '%s'", request->cmd.c_str());
-      response->rc = tello_msgs::srv::TelloAction::Response::ERROR_BUSY;
+      response->rc = response->ERROR_BUSY;
     }
   }
 #pragma clang diagnostic pop
@@ -248,14 +303,12 @@ public:
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
   {
     if (flight_state_ == FlightState::flying) {
-      // std::cout << std::endl << "target v: " << msg->linear.x << ", " << msg->linear.y << ", " << msg->linear.z << std::endl << std::endl;
-
       // TODO cmd_vel should specify velocity, not joystick position
-
-      x_controller_.set_target(msg->linear.x * MAX_XY_V);
-      y_controller_.set_target(msg->linear.y * MAX_XY_V);
-      z_controller_.set_target(msg->linear.z * MAX_Z_V);
-      yaw_controller_.set_target(msg->angular.z * MAX_ANG_V);
+      set_target_velocities(
+        msg->linear.x * MAX_XY_V,
+        msg->linear.y * MAX_XY_V,
+        msg->linear.z * MAX_Z_V,
+        msg->angular.z * MAX_ANG_V);
     }
   }
 

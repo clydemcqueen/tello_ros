@@ -15,8 +15,6 @@ using namespace std::chrono_literals;
 
 namespace tello_gazebo {
 
-const bool DEBUG = false;
-
 const double MAX_XY_V = 8.0;
 const double MAX_Z_V = 4.0;
 const double MAX_ANG_V = M_PI;
@@ -25,6 +23,12 @@ const double MAX_XY_A = 8.0;
 const double MAX_Z_A = 4.0;
 const double MAX_ANG_A = M_PI;
 
+const double TAKEOFF_Z = 1.0;     // Takeoff target z position
+const double TAKEOFF_Z_V = 0.5;   // Takeoff target z velocity
+
+const double LAND_Z = 0.1;        // Land target z position
+const double LAND_Z_V = -0.5;     // Land target z velocity
+
 inline double clamp(const double v, const double max)
 {
   return v > max ? max : (v < -max ? -max : v);
@@ -32,6 +36,23 @@ inline double clamp(const double v, const double max)
 
 class TelloPlugin : public gazebo::ModelPlugin
 {
+  enum class FlightState
+  {
+    landed,
+    taking_off,
+    flying,
+    landing,
+  };
+
+  std::map<FlightState, const char *> state_strs_{
+    {FlightState::landed, "landed"},
+    {FlightState::taking_off, "taking_off"},
+    {FlightState::flying, "flying"},
+    {FlightState::landing, "landing"},
+  };
+
+  FlightState flight_state_;
+
   //gazebo::physics::Model model_;
   gazebo::physics::LinkPtr base_link_;
 
@@ -71,10 +92,45 @@ public:
 
   TelloPlugin()
   {
+    (void)update_connection_;
+    (void)command_srv_;
+    (void)cmd_vel_sub_;
+    (void)timer_;
+
+    transition(FlightState::landed);
   }
 
   ~TelloPlugin()
   {
+  }
+
+  void transition(FlightState next)
+  {
+    if (node_ != nullptr) {
+      RCLCPP_INFO(node_->get_logger(), "transition from '%s' to '%s'", state_strs_[flight_state_], state_strs_[next]);
+    }
+
+    flight_state_ = next;
+
+    switch (flight_state_)
+    {
+      case FlightState::landing:
+      case FlightState::landed:
+        // Apply a downward force while landing, and when on the ground
+        x_controller_.set_target(0);
+        y_controller_.set_target(0);
+        z_controller_.set_target(LAND_Z_V);
+        yaw_controller_.set_target(0);
+        break;
+
+      case FlightState::taking_off:
+        z_controller_.set_target(TAKEOFF_Z_V);
+        break;
+
+      case FlightState::flying:
+        z_controller_.set_target(0);
+        break;
+    }
   }
 
   // Called once when the plugin is loaded.
@@ -83,13 +139,9 @@ public:
     GZ_ASSERT(model != nullptr, "Model is null");
     GZ_ASSERT(sdf != nullptr, "SDF is null");
 
-    std::string ns;
     std::string link_name {"base_link"};
 
     // In theory we can move much of this config into the <ros> tag, but this appears unfinished in Crystal
-    if (sdf->HasElement("ns")) {
-      ns = sdf->GetElement("ns")->Get<std::string>();
-    }
     if (sdf->HasElement("link_name")) {
       link_name = sdf->GetElement("link_name")->Get<std::string>();
     }
@@ -103,7 +155,6 @@ public:
     std::cout << std::endl;
     std::cout << "TELLO PLUGIN" << std::endl;
     std::cout << "-----------------------------------------" << std::endl;
-    std::cout << "ns: " << ns << std::endl;
     std::cout << "link_name: " << link_name << std::endl;
     std::cout << "center_of_mass: " << center_of_mass_ << std::endl;
     std::cout << "-----------------------------------------" << std::endl;
@@ -115,21 +166,17 @@ public:
     // ROS node
     node_ = gazebo_ros::Node::Get(sdf);
 
-    if (!ns.empty()) {
-      ns.append("/");
-    }
-
     // ROS publishers
-    flight_data_pub_ = node_->create_publisher<tello_msgs::msg::FlightData>(ns + "flight_data", 1);
-    tello_response_pub_ = node_->create_publisher<tello_msgs::msg::TelloResponse>(ns + "tello_response", 1);
+    flight_data_pub_ = node_->create_publisher<tello_msgs::msg::FlightData>("flight_data", 1);
+    tello_response_pub_ = node_->create_publisher<tello_msgs::msg::TelloResponse>("tello_response", 1);
 
     // ROS service
-    command_srv_ = node_->create_service<tello_msgs::srv::TelloAction>(ns + "tello_action",
+    command_srv_ = node_->create_service<tello_msgs::srv::TelloAction>("tello_action",
       std::bind(&TelloPlugin::command_callback, this,
       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     // ROS subscription
-    cmd_vel_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>(ns + "cmd_vel",
+    cmd_vel_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>("cmd_vel",
       std::bind(&TelloPlugin::cmd_vel_callback, this, std::placeholders::_1));
 
     // 10Hz ROS timer
@@ -142,13 +189,6 @@ public:
   // Called by the world update start event, up to 1000 times per second.
   void OnUpdate(const gazebo::common::UpdateInfo& info)
   {
-    static int count = 0;
-    bool debug = false;
-    if (++count > 100) {
-      debug = DEBUG;
-      count = 0;
-    }
-
     // dt
     double dt = (info.simTime - sim_time_).Double();
     sim_time_ = info.simTime;
@@ -157,11 +197,6 @@ public:
     ignition::math::Vector3d linear_velocity = base_link_->RelativeLinearVel();
     ignition::math::Vector3d angular_velocity = base_link_->RelativeAngularVel();
 
-    if (debug) {
-      std::cout << "linear v: " << linear_velocity.X() << ", " << linear_velocity.Y() << ", " << linear_velocity.Z() << std::endl;
-      std::cout << "angular v: " << angular_velocity.X() << ", " << angular_velocity.Y() << ", " << angular_velocity.Z() << std::endl;
-    }
-
     // Calc desired acceleration (ubar)
     ignition::math::Vector3d lin_ubar, ang_ubar;
     lin_ubar.X(x_controller_.calc(linear_velocity.X(), dt, 0));
@@ -169,31 +204,15 @@ public:
     lin_ubar.Z(z_controller_.calc(linear_velocity.Z(), dt, 0));
     ang_ubar.Z(yaw_controller_.calc(angular_velocity.Z(), dt, 0));
 
-    if (debug) {
-      std::cout << "lin_ubar: " << lin_ubar.X() << ", " << lin_ubar.Y() << ", " << lin_ubar.Z() << std::endl;
-      std::cout << "ang_ubar: " << ang_ubar.X() << ", " << ang_ubar.Y() << ", " << ang_ubar.Z() << std::endl;
-    }
-
     // Clamp acceleration
     lin_ubar.X() = clamp(lin_ubar.X(), MAX_XY_A);
     lin_ubar.Y() = clamp(lin_ubar.Y(), MAX_XY_A);
     lin_ubar.Z() = clamp(lin_ubar.Z(), MAX_Z_A);
     ang_ubar.Z() = clamp(ang_ubar.Z(), MAX_ANG_A);
 
-    if (debug) {
-      std::cout << "lin_ubar clamped: " << lin_ubar.X() << ", " << lin_ubar.Y() << ", " << lin_ubar.Z() << std::endl;
-      std::cout << "ang_ubar clamped: " << ang_ubar.X() << ", " << ang_ubar.Y() << ", " << ang_ubar.Z() << std::endl;
-    }
-
     // Calc force and torque
     ignition::math::Vector3d force = lin_ubar * base_link_->GetInertial()->Mass();
     ignition::math::Vector3d torque = ang_ubar * base_link_->GetInertial()->MOI();
-
-    if (debug) {
-      std::cout << "force: " << force.X() << ", " << force.Y() << ", " << force.Z() << std::endl;
-      std::cout << "torque: " << torque.X() << ", " << torque.Y() << ", " << torque.Z() << std::endl;
-      std::cout << std::endl;
-    }
 
     // Set roll and pitch to 0
     ignition::math::Pose3d pose = base_link_->WorldPose();
@@ -206,24 +225,46 @@ public:
     base_link_->AddRelativeTorque(torque); // ODE adds torque at the center of mass
   }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "UnusedValue"
   void command_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<tello_msgs::srv::TelloAction::Request> request,
     std::shared_ptr<tello_msgs::srv::TelloAction::Response> response)
   {
-    // TODO initiate command
+    if (request->cmd == "takeoff" && flight_state_ == FlightState::landed) {
+      transition(FlightState::taking_off);
+      response->rc = tello_msgs::srv::TelloAction::Response::OK;
+    } else if (request->cmd == "land" && flight_state_ == FlightState::flying) {
+      transition(FlightState::landing);
+      response->rc = tello_msgs::srv::TelloAction::Response::OK;
+    } else {
+      RCLCPP_ERROR(node_->get_logger(), "ignoring command '%s'", request->cmd.c_str());
+      response->rc = tello_msgs::srv::TelloAction::Response::ERROR_BUSY;
+    }
   }
+#pragma clang diagnostic pop
 
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
   {
-    // std::cout << std::endl << "target v: " << msg->linear.x << ", " << msg->linear.y << ", " << msg->linear.z << std::endl << std::endl;
+    if (flight_state_ == FlightState::flying) {
+      // std::cout << std::endl << "target v: " << msg->linear.x << ", " << msg->linear.y << ", " << msg->linear.z << std::endl << std::endl;
 
-    // TODO cmd_vel should specify velocity, not joystick position
+      // TODO cmd_vel should specify velocity, not joystick position
 
-    x_controller_.set_target(msg->linear.x * MAX_XY_V);
-    y_controller_.set_target(msg->linear.y * MAX_XY_V);
-    z_controller_.set_target(msg->linear.z * MAX_Z_V);
-    yaw_controller_.set_target(msg->angular.z * MAX_ANG_V);
+      x_controller_.set_target(msg->linear.x * MAX_XY_V);
+      y_controller_.set_target(msg->linear.y * MAX_XY_V);
+      z_controller_.set_target(msg->linear.z * MAX_Z_V);
+      yaw_controller_.set_target(msg->angular.z * MAX_ANG_V);
+    }
+  }
+
+  void respond_ok()
+  {
+    tello_msgs::msg::TelloResponse msg;
+    msg.rc = msg.OK;
+    msg.str = "ok";
+    tello_response_pub_->publish(msg);
   }
 
   void spin_10Hz()
@@ -235,7 +276,15 @@ public:
     flight_data.bat = 80;
     flight_data_pub_->publish(flight_data);
 
-    // TODO publish tello response
+    ignition::math::Pose3d pose = base_link_->WorldPose();
+
+    if (flight_state_ == FlightState::taking_off && pose.Pos().Z() > TAKEOFF_Z) {
+      transition(FlightState::flying);
+      respond_ok();
+    } else if (flight_state_ == FlightState::landing && pose.Pos().Z() < LAND_Z) {
+      transition(FlightState::landed);
+      respond_ok();
+    }
   }
 };
 

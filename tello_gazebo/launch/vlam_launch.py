@@ -55,12 +55,7 @@ def generate_launch_description():
                  node_name='vloc_node', node_namespace=namespace, parameters=[{
                     'publish_tfs': 1,
                     'base_frame_id': 'base_link' + suffix,
-                    'map_init_pose_x': 0.035,
-                    'map_init_pose_y': 0.0,
-                    'map_init_pose_z': 0.0,
-                    'map_init_pose_roll': 0.785402,
-                    'map_init_pose_pitch': -1.57079,
-                    'map_init_pose_yaw': 0.785402,
+                    'map_init_pose_z': -0.035,
                     'camera_frame_id': 'camera_link' + suffix}]),
 
         ])

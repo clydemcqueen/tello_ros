@@ -79,7 +79,7 @@
   <!-- Tello plugin for Gazebo -->
   <gazebo>
     <plugin name="TelloPlugin" filename="libTelloPlugin.so">
-      <ns>${topic_ns}</ns>
+      <namespace>${topic_ns}</namespace>
       <link_name>base_link${suffix}</link_name>
       <center_of_mass>0 0 0</center_of_mass>
     </plugin>

@@ -9,8 +9,9 @@ from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
+    ns = 'drone1'
     world_path = os.path.join(get_package_share_directory('tello_gazebo'), 'worlds', 'simple.world')
-    urdf_path = os.path.join(get_package_share_directory('tello_description'), 'urdf', 'tello.urdf')
+    urdf_path = os.path.join(get_package_share_directory('tello_description'), 'urdf', 'tello_1.urdf')
 
     return LaunchDescription([
         # Launch Gazebo, loading tello.world
@@ -24,9 +25,11 @@ def generate_launch_description():
         Node(package='robot_state_publisher', node_executable='robot_state_publisher', output='screen',
              arguments=[urdf_path]),
 
-        # Fire up a joystick
-        Node(package='joy', node_executable='joy_node', output='screen'),
+        # Joystick driver, generates /namespace/joy messages
+        Node(package='joy', node_executable='joy_node', output='screen',
+             node_namespace=ns),
 
-        # Very simple joystick driver, will map /joy messages to /cmd_vel, etc.
-        Node(package='tello_driver', node_executable='tello_joy', output='screen'),
+        # Joystick controller, generates /namespace/cmd_vel messages
+        Node(package='tello_driver', node_executable='tello_joy', output='screen',
+             node_namespace=ns),
     ])

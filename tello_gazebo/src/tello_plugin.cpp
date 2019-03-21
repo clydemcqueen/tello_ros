@@ -70,11 +70,8 @@ class TelloPlugin : public gazebo::ModelPlugin
 
   FlightState flight_state_;
 
-  //gazebo::physics::Model model_;
   gazebo::physics::LinkPtr base_link_;
-
-  // Force will be applied to the center_of_mass_ (body frame)
-  // TODO is it possible to get this from the link?
+  ignition::math::Vector3d gravity_;
   ignition::math::Vector3d center_of_mass_ {0, 0, 0};
 
   // Connection to Gazebo message bus
@@ -164,18 +161,17 @@ public:
 
     switch (flight_state_)
     {
-      case FlightState::landing:
       case FlightState::landed:
-        // Apply a downward force while landing, and when on the ground
-        set_target_velocities(0, 0, LAND_Z_V, 0);
+      case FlightState::flying:
+        set_target_velocities(0, 0, 0, 0);
         break;
 
       case FlightState::taking_off:
         set_target_velocities(0, 0, TAKEOFF_Z_V, 0);
         break;
 
-      case FlightState::flying:
-        set_target_velocities(0, 0, 0, 0);
+      case FlightState::landing:
+        set_target_velocities(0, 0, LAND_Z_V, 0);
         break;
     }
   }
@@ -204,11 +200,14 @@ public:
     std::cout << "-----------------------------------------" << std::endl;
     std::cout << "link_name: " << link_name << std::endl;
     std::cout << "center_of_mass: " << center_of_mass_ << std::endl;
-    std::cout << "-----------------------------------------" << std::endl;
-    std::cout << std::endl;
 
     base_link_ = model->GetLink(link_name);
     GZ_ASSERT(base_link_ != nullptr, "Missing link");
+    gravity_ = model->GetWorld()->Gravity();
+
+    std::cout << "gravity: " << gravity_ << std::endl;
+    std::cout << "-----------------------------------------" << std::endl;
+    std::cout << std::endl;
 
     // ROS node
     node_ = gazebo_ros::Node::Get(sdf);
@@ -240,36 +239,42 @@ public:
     double dt = (info.simTime - sim_time_).Double();
     sim_time_ = info.simTime;
 
-    // Get current velocity
-    ignition::math::Vector3d linear_velocity = base_link_->RelativeLinearVel();
-    ignition::math::Vector3d angular_velocity = base_link_->RelativeAngularVel();
+    // Don't apply force if we're landed
+    if (flight_state_ != FlightState::landed) {
+      // Get current velocity
+      ignition::math::Vector3d linear_velocity = base_link_->RelativeLinearVel();
+      ignition::math::Vector3d angular_velocity = base_link_->RelativeAngularVel();
 
-    // Calc desired acceleration (ubar)
-    ignition::math::Vector3d lin_ubar, ang_ubar;
-    lin_ubar.X(x_controller_.calc(linear_velocity.X(), dt, 0));
-    lin_ubar.Y(y_controller_.calc(linear_velocity.Y(), dt, 0));
-    lin_ubar.Z(z_controller_.calc(linear_velocity.Z(), dt, 0));
-    ang_ubar.Z(yaw_controller_.calc(angular_velocity.Z(), dt, 0));
+      // Calc desired acceleration (ubar)
+      ignition::math::Vector3d lin_ubar, ang_ubar;
+      lin_ubar.X(x_controller_.calc(linear_velocity.X(), dt, 0));
+      lin_ubar.Y(y_controller_.calc(linear_velocity.Y(), dt, 0));
+      lin_ubar.Z(z_controller_.calc(linear_velocity.Z(), dt, 0));
+      ang_ubar.Z(yaw_controller_.calc(angular_velocity.Z(), dt, 0));
 
-    // Clamp acceleration
-    lin_ubar.X() = clamp(lin_ubar.X(), MAX_XY_A);
-    lin_ubar.Y() = clamp(lin_ubar.Y(), MAX_XY_A);
-    lin_ubar.Z() = clamp(lin_ubar.Z(), MAX_Z_A);
-    ang_ubar.Z() = clamp(ang_ubar.Z(), MAX_ANG_A);
+      // Clamp acceleration
+      lin_ubar.X() = clamp(lin_ubar.X(), MAX_XY_A);
+      lin_ubar.Y() = clamp(lin_ubar.Y(), MAX_XY_A);
+      lin_ubar.Z() = clamp(lin_ubar.Z(), MAX_Z_A);
+      ang_ubar.Z() = clamp(ang_ubar.Z(), MAX_ANG_A);
 
-    // Calc force and torque
-    ignition::math::Vector3d force = lin_ubar * base_link_->GetInertial()->Mass();
-    ignition::math::Vector3d torque = ang_ubar * base_link_->GetInertial()->MOI();
+      // Compensate for gravity
+      lin_ubar -= gravity_;
 
-    // Set roll and pitch to 0
-    ignition::math::Pose3d pose = base_link_->WorldPose();
-    pose.Rot().X(0);
-    pose.Rot().Y(0);
-    base_link_->SetWorldPose(pose);
+      // Calc force and torque
+      ignition::math::Vector3d force = lin_ubar * base_link_->GetInertial()->Mass();
+      ignition::math::Vector3d torque = ang_ubar * base_link_->GetInertial()->MOI();
 
-    // Apply force and torque
-    base_link_->AddLinkForce(force, center_of_mass_);
-    base_link_->AddRelativeTorque(torque); // ODE adds torque at the center of mass
+      // Set roll and pitch to 0
+      ignition::math::Pose3d pose = base_link_->WorldPose();
+      pose.Rot().X(0);
+      pose.Rot().Y(0);
+      base_link_->SetWorldPose(pose);
+
+      // Apply force and torque
+      base_link_->AddLinkForce(force, center_of_mass_);
+      base_link_->AddRelativeTorque(torque); // ODE adds torque at the center of mass
+    }
   }
 
   bool is_prefix(const std::string &prefix, const std::string &str)

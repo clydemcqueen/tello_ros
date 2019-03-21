@@ -3,9 +3,6 @@
 <sdf version="1.6">
   <world name="default">
 
-    <!-- Turn gravity off -->
-    <gravity>0 0 0</gravity>
-
     <!-- Tweak to run at higher or lower speeds -->
     <physics name="normal" type="ode">
       <real_time_update_rate>1000</real_time_update_rate>

@@ -15,7 +15,13 @@ def generate_launch_description():
 
     return LaunchDescription([
         # Launch Gazebo, loading tello.world
-        ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_factory.so', world_path], output='screen'),
+        ExecuteProcess(cmd=[
+            'gazebo',
+            '--verbose',
+            '-s', 'libgazebo_ros_init.so',      # Publish /clock
+            '-s', 'libgazebo_ros_factory.so',   # Provide gazebo_ros::Node
+            world_path
+        ], output='screen'),
 
         # Spawn tello.urdf
         Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen',

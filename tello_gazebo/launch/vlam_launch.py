@@ -21,7 +21,13 @@ def generate_launch_description():
     # Global entities
     entities = [
         # Launch Gazebo, loading tello.world
-        ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_factory.so', world_path], output='screen'),
+        ExecuteProcess(cmd=[
+            'gazebo',
+            '--verbose',
+            '-s', 'libgazebo_ros_init.so',      # Publish /clock
+            '-s', 'libgazebo_ros_factory.so',   # Provide gazebo_ros::Node
+            world_path
+        ], output='screen'),
 
         # Load and publish a known map
         Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',

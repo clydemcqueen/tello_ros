@@ -47,7 +47,7 @@ const double TAKEOFF_Z_V = 0.5;   // Takeoff target z velocity
 const double LAND_Z = 0.1;        // Land target z position
 const double LAND_Z_V = -0.5;     // Land target z velocity
 
-const int BATTERY_DURATION = 60;  // Battery duration in seconds
+const int BATTERY_DURATION = 600; // Battery duration in seconds
 
 inline double clamp(const double v, const double max)
 {

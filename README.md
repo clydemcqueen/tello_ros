@@ -4,9 +4,12 @@
 
 ## Packages
 
-There are 2 ROS packages:
+There are 4 ROS packages:
 * `tello_driver` is a C++ ROS node that connects to the drone
 * `tello_msgs` is a set of ROS messages
+* `tello_description` contains robot description (URDF) files
+* `tello_gazebo` can be used to simulate a Tello drone in [Gazebo](http://gazebosim.org/),
+ see the `README.md` in that package for details
 
 ## Interface
 
@@ -20,8 +23,8 @@ The driver communicates with the drone using the Tello SDK, which has several ad
 arbitrary strings to the drone.
 
 Many Tello commands (e.g., `takeoff` and `land`) are long-running, and the drone returns `ok` or `error` on completion.
-In ROS it's common to use actions in these situations, but actions are not available in `rclpy`
-(the ROS2 Python client) as of ROS2-Crystal.
+In ROS it's common to use actions in these situations, but as of ROS2-Crystal actions are not available in `rclpy`
+(the ROS2 Python client).
 For now, the driver provides the ROS service `tello_command` to initiate commands,
 and the corresponding ROS topic `tello_response` to indicate command completion.
 This may change when ROS2-Dashing is released.
@@ -108,7 +111,8 @@ cd ~/tello_ros_ws/src
 git clone https://github.com/clydemcqueen/tello_ros.git
 cd ..
 source /opt/ros/crystal/setup.bash
-colcon build --event-handlers console_direct+
+# If you didn't intall Gazebo, skip tello_gazebo while building:
+colcon build --event-handlers console_direct+ --packages-skip tello_gazebo
 ~~~
 
 ## Running

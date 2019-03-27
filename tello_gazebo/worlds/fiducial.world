@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<sdf version="1.6">
+  <world name="default">
+
+    <!-- Tweak to run at higher or lower speeds -->
+    <physics name="normal" type="ode">
+      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+    </physics>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Lighting -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- ArUco markers -->
+    <model name="marker0">
+      <include>
+        <static>true</static>
+        <uri>model://marker_0</uri>
+      </include>
+      <pose>2 0 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker1">
+      <include>
+        <static>true</static>
+        <uri>model://marker_1</uri>
+      </include>
+      <pose>2 1 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker2">
+      <include>
+        <static>true</static>
+        <uri>model://marker_2</uri>
+      </include>
+      <pose>2 2 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker3">
+      <include>
+        <static>true</static>
+        <uri>model://marker_3</uri>
+      </include>
+      <pose>2 3 0.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker4">
+      <include>
+        <static>true</static>
+        <uri>model://marker_4</uri>
+      </include>
+      <pose>2 0 1.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker5">
+      <include>
+        <static>true</static>
+        <uri>model://marker_5</uri>
+      </include>
+      <pose>2 1 1.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker6">
+      <include>
+        <static>true</static>
+        <uri>model://marker_6</uri>
+      </include>
+      <pose>2 2 1.5 0 -1.57 0</pose>
+    </model>
+    <model name="marker7">
+      <include>
+        <static>true</static>
+        <uri>model://marker_7</uri>
+      </include>
+      <pose>2 3 1.5 0 -1.57 0</pose>
+    </model>
+
+  </world>
+</sdf>

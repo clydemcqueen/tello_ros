@@ -41,13 +41,13 @@ const double MAX_XY_A = 8.0;
 const double MAX_Z_A = 4.0;
 const double MAX_ANG_A = M_PI;
 
-const double TAKEOFF_Z = 1.0;     // Takeoff target z position
-const double TAKEOFF_Z_V = 0.5;   // Takeoff target z velocity
+const double TAKEOFF_Z = 1.0;       // Takeoff target z position
+const double TAKEOFF_Z_V = 0.5;     // Takeoff target z velocity
 
-const double LAND_Z = 0.1;        // Land target z position
-const double LAND_Z_V = -0.5;     // Land target z velocity
+const double LAND_Z = 0.1;          // Land target z position
+const double LAND_Z_V = -0.5;       // Land target z velocity
 
-const int BATTERY_DURATION = 600; // Battery duration in seconds
+const int BATTERY_DURATION = 6000;  // Battery duration in seconds
 
 inline double clamp(const double v, const double max)
 {
@@ -350,8 +350,15 @@ public:
 
   void spin_10Hz()
   {
+    rclcpp::Time ros_time = node_->now();
+
+    // Wait for ROS time to get reasonable
+    if (ros_time.seconds() < 1.0) {
+      return;
+    }
+
     // Simulate a battery
-    int battery_percent = static_cast<int>((battery_duration_ - node_->now().seconds()) / battery_duration_ * 100);
+    int battery_percent = static_cast<int>((battery_duration_ - ros_time.seconds()) / battery_duration_ * 100);
     if (battery_percent <= 0) {
       // We're dead
       transition(FlightState::dead_battery);
@@ -360,7 +367,7 @@ public:
 
     // Publish flight data
     tello_msgs::msg::FlightData flight_data;
-    flight_data.header.stamp = node_->now();
+    flight_data.header.stamp = ros_time;
     flight_data.sdk = flight_data.SDK_1_3;
     flight_data.bat = battery_percent;
     flight_data_pub_->publish(flight_data);

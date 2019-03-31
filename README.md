@@ -89,6 +89,11 @@ The defaults work well for a single Tello drone.
 
 Set up a Ubuntu 18.04 box or VM. This should include ffmpeg 3.4.4 and OpenCV 3.2.
 
+Also install asio:
+~~~
+sudo apt install libasio-dev
+~~~
+
 ### 2. Set up your ROS environment
 
 [Install ROS2 Crystal Clemmys](https://github.com/ros2/ros2/wiki/Installation) with the `ros-crystal-desktop` option.

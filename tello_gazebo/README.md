@@ -20,7 +20,6 @@ Install these additional ROS packages:
 Run a teleop simulation:
 
     cd ~/tello_ros_ws
-    source /opt/ros/crystal/setup.bash
     source install/setup.bash
     export GAZEBO_MODEL_PATH=${PWD}/install/tello_gazebo/share/tello_gazebo/models
     ros2 launch tello_gazebo simple_launch.py
@@ -37,7 +36,7 @@ If you run into a dynamic linking problem ("libCameraPlugin.so: cannot open shar
     git checkout 9593afce820fd290cb0b0c44dffd4e04d927251a
     cd ~/tello_ros_ws
     colcon build --event-handlers console_direct+
-    source install/setup.bash
+    source install/local_setup.bash
     export GAZEBO_PLUGIN_PATH=${PWD}/install/gazebo_plugins/lib
     cp /usr/lib/x86_64-linux-gnu/gazebo-9/plugins/* install/gazebo_plugins/lib
     ros2 launch tello_gazebo simple_launch.py
@@ -49,5 +48,5 @@ Integrate with `fiducial_vlam`:
     git clone https://github.com/clydemcqueen/odom_filter.git
     cd ..      
     colcon build --event-handlers console_direct+
-    source install/setup.bash
+    source install/local_setup.bash
     ros2 launch tello_gazebo vlam_launch.py

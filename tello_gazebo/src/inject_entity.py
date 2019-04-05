@@ -3,6 +3,7 @@
 """Inject an SDF or URDF file into Gazebo"""
 
 import sys
+import transformations
 
 import rclpy
 from gazebo_msgs.srv import SpawnEntity
@@ -35,8 +36,8 @@ def inject(xml: str, initial_pose: Pose):
     rclpy.shutdown()
 
 
-if len(sys.argv) < 5:
-    print('usage: ros2 run tello_gazebo inject_entity.py -- foo.urdf initial_x initial_y initial_z')
+if len(sys.argv) < 6:
+    print('usage: ros2 run tello_gazebo inject_entity.py -- foo.urdf initial_x initial_y initial_z initial_yaw')
     sys.exit(1)
 
 f = open(sys.argv[1], 'r')
@@ -45,5 +46,10 @@ p = Pose()
 p.position.x = float(sys.argv[2])
 p.position.y = float(sys.argv[3])
 p.position.z = float(sys.argv[4])
+q = transformations.quaternion_from_euler(0, 0, float(sys.argv[5]))
+p.orientation.w = q[0]
+p.orientation.x = q[1]
+p.orientation.y = q[2]
+p.orientation.z = q[3]
 
 inject(f.read(), p)

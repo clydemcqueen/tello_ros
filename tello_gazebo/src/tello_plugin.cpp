@@ -352,7 +352,7 @@ public:
   {
     rclcpp::Time ros_time = node_->now();
 
-    // Wait for ROS time to get reasonable
+    // Wait for ROS time to get reasonable TODO sometimes this never happens
     if (ros_time.seconds() < 1.0) {
       return;
     }

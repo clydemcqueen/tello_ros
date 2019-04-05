@@ -54,7 +54,7 @@ def generate_launch_description():
         entities.extend([
             # Add a drone to the simulation
             Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen',
-                 arguments=[urdf_path, '0', str(idx), '1']),
+                 arguments=[urdf_path, '0', str(idx), '1', '0']),
 
             # Localize this drone against the map
             Node(package='fiducial_vlam', node_executable='vloc_node', output='screen',

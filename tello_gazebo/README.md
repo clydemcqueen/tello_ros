@@ -42,9 +42,7 @@ If you run into a dynamic linking problem like
 try this workaround:
 
     cd ~/tello_ros_ws/src
-    git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git
-    cd gazebo_ros_pkgs
-    git checkout 9593afce820fd290cb0b0c44dffd4e04d927251a
+    git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git -b crystal
     cd ~/tello_ros_ws
     colcon build --event-handlers console_direct+
     source install/local_setup.bash

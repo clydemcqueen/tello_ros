@@ -25,56 +25,56 @@
         <static>true</static>
         <uri>model://marker_0</uri>
       </include>
-      <pose>2 0 0.5 0 -1.57 0</pose>
+      <pose>2 0 0.5 0 -1.5707963267948966 0</pose>
     </model>
     <model name="marker1">
       <include>
         <static>true</static>
         <uri>model://marker_1</uri>
       </include>
-      <pose>2 1 0.5 0 -1.57 0</pose>
+      <pose>2 1 0.5 0 -1.5707963267948966 0</pose>
     </model>
     <model name="marker2">
       <include>
         <static>true</static>
         <uri>model://marker_2</uri>
       </include>
-      <pose>2 2 0.5 0 -1.57 0</pose>
+      <pose>2 2 0.5 0 -1.5707963267948966 0</pose>
     </model>
     <model name="marker3">
       <include>
         <static>true</static>
         <uri>model://marker_3</uri>
       </include>
-      <pose>2 3 0.5 0 -1.57 0</pose>
+      <pose>2 3 0.5 0 -1.5707963267948966 0</pose>
     </model>
     <model name="marker4">
       <include>
         <static>true</static>
         <uri>model://marker_4</uri>
       </include>
-      <pose>2 0 1.5 0 -1.57 0</pose>
+      <pose>2 0 1.5 0 -1.5707963267948966 0</pose>
     </model>
     <model name="marker5">
       <include>
         <static>true</static>
         <uri>model://marker_5</uri>
       </include>
-      <pose>2 1 1.5 0 -1.57 0</pose>
+      <pose>2 1 1.5 0 -1.5707963267948966 0</pose>
     </model>
     <model name="marker6">
       <include>
         <static>true</static>
         <uri>model://marker_6</uri>
       </include>
-      <pose>2 2 1.5 0 -1.57 0</pose>
+      <pose>2 2 1.5 0 -1.5707963267948966 0</pose>
     </model>
     <model name="marker7">
       <include>
         <static>true</static>
         <uri>model://marker_7</uri>
       </include>
-      <pose>2 3 1.5 0 -1.57 0</pose>
+      <pose>2 3 1.5 0 -1.5707963267948966 0</pose>
     </model>
 
   </world>

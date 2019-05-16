@@ -93,7 +93,7 @@
     <sensor type="camera" name="${topic_ns}">
       <update_rate>30.0</update_rate>
       <camera name="head">  <!-- TODO does this name do anything? -->
-        <horizontal_fov>1.3962634</horizontal_fov>
+        <horizontal_fov>0.96</horizontal_fov>
         <image>
           <width>960</width>
           <height>720</height>

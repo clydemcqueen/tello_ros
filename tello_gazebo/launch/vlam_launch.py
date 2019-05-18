@@ -32,6 +32,7 @@ def generate_launch_description():
         # Load and publish a known map
         Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',
              node_name='vmap_node', parameters=[{
+                'publish_tfs': 1,                               # Publish marker /tf
                 'marker_length': 0.1778,                        # Marker length
                 'marker_map_load_full_filename': map_path,      # Load a pre-built map from disk
                 'make_not_use_map': 0}]),                       # Don't save a map to disk
@@ -61,7 +62,7 @@ def generate_launch_description():
                  node_name='vloc_node', node_namespace=namespace, parameters=[{
                     'publish_tfs': 1,
                     'base_frame_id': 'base_link' + suffix,
-                    'map_init_pose_z': -0.035,
+                    't_camera_base_z': -0.035,
                     'camera_frame_id': 'camera_link' + suffix}]),
 
         ])

@@ -18,8 +18,8 @@ def generate_launch_description():
         ExecuteProcess(cmd=[
             'gazebo',
             '--verbose',
-            '-s', 'libgazebo_ros_init.so',      # Publish /clock
-            '-s', 'libgazebo_ros_factory.so',   # Provide gazebo_ros::Node
+            '-s', 'libgazebo_ros_init.so',  # Publish /clock
+            '-s', 'libgazebo_ros_factory.so',  # Provide gazebo_ros::Node
             world_path
         ], output='screen'),
 

@@ -2,31 +2,31 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
 
-  <name>tello_driver</name>
-  <version>0.1.0</version>
-  <description>Tello ROS driver</description>
+    <name>tello_driver</name>
+    <version>0.1.0</version>
+    <description>Tello ROS driver</description>
 
-  <maintainer email="clyde@mcqueen.net">Clyde McQueen</maintainer>
-  <license>BSD</license>
+    <maintainer email="clyde@mcqueen.net">Clyde McQueen</maintainer>
+    <license>BSD</license>
 
-  <url type="repository">https://github.com/clydemcqueen/tello_ros.git</url>
-  <url type="bugtracker">https://github.com/clydemcqueen/tello_ros/issues</url>
+    <url type="repository">https://github.com/clydemcqueen/tello_ros.git</url>
+    <url type="bugtracker">https://github.com/clydemcqueen/tello_ros/issues</url>
 
-  <author>Clyde McQueen</author>
-  <author>Peter Mullen</author>
+    <author>Clyde McQueen</author>
+    <author>Peter Mullen</author>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+    <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>cv_bridge</depend>
-  <depend>OpenCV</depend>
-  <depend>rclcpp</depend>
-  <depend>geometry_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>tello_msgs</depend>
+    <depend>cv_bridge</depend>
+    <depend>OpenCV</depend>
+    <depend>rclcpp</depend>
+    <depend>geometry_msgs</depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>tello_msgs</depend>
 
-  <export>
-    <build_type>ament_cmake</build_type>
-  </export>
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
 
 </package>

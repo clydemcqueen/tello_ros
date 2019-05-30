@@ -6,21 +6,21 @@ project(tello_driver)
 #=============
 
 # Default to C99
-if(NOT CMAKE_C_STANDARD)
+if (NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
-endif()
+endif ()
 
 # Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
+if (NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
-endif()
+endif ()
 
 # Emulate colcon
-if($ENV{CLION_IDE})
+if ($ENV{CLION_IDE})
   message("Running inside CLion")
   set(tello_msgs_DIR "${PROJECT_SOURCE_DIR}/../../../install/tello_msgs/share/tello_msgs/cmake")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRUN_INSIDE_CLION")
-endif()
+endif ()
 
 # Asio requires threading
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")

@@ -24,18 +24,18 @@ def generate_launch_description():
         ExecuteProcess(cmd=[
             'gazebo',
             '--verbose',
-            '-s', 'libgazebo_ros_init.so',      # Publish /clock
-            '-s', 'libgazebo_ros_factory.so',   # Provide gazebo_ros::Node
+            '-s', 'libgazebo_ros_init.so',  # Publish /clock
+            '-s', 'libgazebo_ros_factory.so',  # Provide gazebo_ros::Node
             world_path
         ], output='screen'),
 
         # Load and publish a known map
         Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',
              node_name='vmap_node', parameters=[{
-                'publish_tfs': 1,                               # Publish marker /tf
-                'marker_length': 0.1778,                        # Marker length
-                'marker_map_load_full_filename': map_path,      # Load a pre-built map from disk
-                'make_not_use_map': 0}]),                       # Don't save a map to disk
+                'publish_tfs': 1,  # Publish marker /tf
+                'marker_length': 0.1778,  # Marker length
+                'marker_map_load_full_filename': map_path,  # Load a pre-built map from disk
+                'make_not_use_map': 0}]),  # Don't save a map to disk
 
         # Joystick driver, generates /namespace/joy messages
         # Only controls the first drone

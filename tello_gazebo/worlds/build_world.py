@@ -23,7 +23,7 @@ import math
 import transformations as xf
 
 pi = math.pi
-pi2 = math.pi/2
+pi2 = math.pi / 2
 
 # SDF and fiducial_vlam have different coordinate models
 t_world_map = xf.quaternion_matrix([math.sqrt(0.5), 0, 0, -math.sqrt(0.5)])

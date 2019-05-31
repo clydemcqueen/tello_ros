@@ -54,7 +54,6 @@ try this workaround:
 
     cd ~/tello_ros_ws/src
     git clone https://github.com/ptrmu/fiducial_vlam.git
-    git clone https://github.com/clydemcqueen/odom_filter.git
     cd ..      
     colcon build --event-handlers console_direct+
     source install/local_setup.bash

@@ -59,12 +59,13 @@ namespace tello_driver
                                                                   std::bind(&TelloDriver::cmd_vel_callback, this,
                                                                             std::placeholders::_1));
 
-    // Parameters
+    // Parameters - Allocate the parameter context as a local variable because it is not used outside this routine
     TelloDriverContext cxt{};
-    auto validate_parameters = [this](){};
 #undef CXT_MACRO_MEMBER
 #define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_LOAD_PARAMETER((*this), cxt, n, t, d)
-    CXT_MACRO_INIT_PARAMETERS(TELLO_DRIVER_ALL_PARAMS, validate_parameters);
+    CXT_MACRO_INIT_PARAMETERS(TELLO_DRIVER_ALL_PARAMS, [this](){})
+
+    // NOTE: This is not setup to dynamically update parameters after ths node is running.
 
     RCLCPP_INFO(get_logger(), "Drone at %s:%d", cxt.drone_ip_.c_str(), cxt.drone_port_);
     RCLCPP_INFO(get_logger(), "Listening for command responses on localhost:%d", cxt.command_port_);

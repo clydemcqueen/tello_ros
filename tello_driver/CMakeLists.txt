@@ -19,6 +19,7 @@ endif ()
 if ($ENV{CLION_IDE})
   message("Running inside CLion")
   set(tello_msgs_DIR "${PROJECT_SOURCE_DIR}/../../../install/tello_msgs/share/tello_msgs/cmake")
+  set(ros2_shared_DIR "${PROJECT_SOURCE_DIR}/../../../install/ros2_shared/share/ros2_shared/cmake")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRUN_INSIDE_CLION")
 endif ()
 
@@ -31,6 +32,7 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(ros2_shared REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(tello_msgs REQUIRED)
@@ -40,6 +42,7 @@ include_directories(
   include
   h264decoder
   ${geometry_msgs_INCLUDE_DIRS}
+  ${ros2_shared_INCLUDE_DIRS}
   ${sensor_msgs_INCLUDE_DIRS}
   ${std_msgs_INCLUDE_DIRS}
   ${tello_msgs_INCLUDE_DIRS})
@@ -64,6 +67,7 @@ ament_target_dependencies(tello_driver
   geometry_msgs
   OpenCV
   rclcpp
+  ros2_shared
   sensor_msgs
   std_msgs
   tello_msgs)

@@ -28,6 +28,7 @@ Run `gazebo` on the command line, fix any problems before continuing.
     cd ~/tello_ros_ws
     source install/setup.bash
     export GAZEBO_MODEL_PATH=${PWD}/install/tello_gazebo/share/tello_gazebo/models
+    source /usr/share/gazebo/setup.sh
     ros2 launch tello_gazebo simple_launch.py
     
 You will see a single drone in a blank world.
@@ -36,19 +37,7 @@ You can control the drone using the joystick.
 If you run into the **No namespace found** error re-set `GAZEBO_MODEL_PATH`:
 
     export GAZEBO_MODEL_PATH=${PWD}/install/tello_gazebo/share/tello_gazebo/models
-
-If you run into a dynamic linking problem like
-**libCameraPlugin.so: cannot open shared object file**
-try this workaround:
-
-    cd ~/tello_ros_ws/src
-    git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git -b dashing
-    cd ~/tello_ros_ws
-    colcon build --event-handlers console_direct+
-    source install/local_setup.bash
-    export GAZEBO_PLUGIN_PATH=${PWD}/install/gazebo_plugins/lib
-    cp /usr/lib/x86_64-linux-gnu/gazebo-9/plugins/* install/gazebo_plugins/lib
-    ros2 launch tello_gazebo simple_launch.py
+    source /usr/share/gazebo/setup.sh
     
 ####  Integrate with `fiducial_vlam`
 

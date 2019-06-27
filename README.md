@@ -23,8 +23,6 @@ The driver communicates with the drone using the Tello SDK, which has several ad
 arbitrary strings to the drone.
 
 Many Tello commands (e.g., `takeoff` and `land`) are long-running, and the drone returns `ok` or `error` on completion.
-In ROS it's common to use actions in these situations, but as of ROS2-Crystal actions are not available in `rclpy`
-(the ROS2 Python client).
 For now, the driver provides the ROS service `tello_command` to initiate commands,
 and the corresponding ROS topic `tello_response` to indicate command completion.
 This may change when ROS2-Dashing is released.
@@ -96,7 +94,7 @@ sudo apt install libasio-dev
 
 ### 2. Set up your ROS environment
 
-[Install ROS2 Crystal Clemmys](https://index.ros.org/doc/ros2/Installation/) with the `ros-crystal-desktop` option.
+[Install ROS2 Dashing Diademata](https://index.ros.org/doc/ros2/Installation/) with the `ros-dashing-desktop` option.
 
 If you install binaries, be sure to also install the 
 [development tools and ROS tools](https://github.com/ros2/ros2/wiki/Linux-Development-Setup#install-development-tools-and-ros-tools)
@@ -104,7 +102,7 @@ from the source installation instructions.
 
 Install these additional packages:
 ~~~
-sudo apt install ros-crystal-cv-bridge
+sudo apt install ros-dashing-cv-bridge
 ~~~
 
 ### 3. Install `tello_ros`
@@ -115,7 +113,7 @@ mkdir -p ~/tello_ros_ws/src
 cd ~/tello_ros_ws/src
 git clone https://github.com/clydemcqueen/tello_ros.git
 cd ..
-source /opt/ros/crystal/setup.bash
+source /opt/ros/dashing/setup.bash
 # If you didn't intall Gazebo, skip tello_gazebo while building:
 colcon build --event-handlers console_direct+ --packages-skip tello_gazebo
 ~~~

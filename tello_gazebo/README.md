@@ -7,7 +7,7 @@
 * `inject_entity.py` is a script that will read an URDF (ROS) or SDF (Gazebo) file and spawn a model in a running instance of Gazebo
 * the built-in camera plugin is used to emulate the Gazebo forward-facing camera
 
-As of this writing ROS2 Crystal + Gazebo v9 integration is still developing. YMMV.
+As of this writing ROS2 Dashing + Gazebo v9 integration is still developing. YMMV.
 
 #### Python
 
@@ -21,7 +21,7 @@ Run `gazebo` on the command line, fix any problems before continuing.
 
 #### Additional ROS packages
 
-    sudo apt install ros-crystal-gazebo-ros-pkgs ros-crystal-cv-bridge
+    sudo apt install ros-dashing-gazebo-ros-pkgs ros-dashing-cv-bridge
 
 #### Run a teleop simulation
 
@@ -42,7 +42,7 @@ If you run into a dynamic linking problem like
 try this workaround:
 
     cd ~/tello_ros_ws/src
-    git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git -b crystal
+    git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git -b dashing
     cd ~/tello_ros_ws
     colcon build --event-handlers console_direct+
     source install/local_setup.bash

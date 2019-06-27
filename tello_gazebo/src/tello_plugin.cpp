@@ -194,7 +194,7 @@ namespace tello_gazebo
 
       std::string link_name{"base_link"};
 
-      // In theory we can move much of this config into the <ros> tag, but this appears unfinished in Crystal
+      // In theory we can move much of this config into the <ros> tag, but this appears unfinished in Dashing?
       if (sdf->HasElement("link_name")) {
         link_name = sdf->GetElement("link_name")->Get<std::string>();
       }

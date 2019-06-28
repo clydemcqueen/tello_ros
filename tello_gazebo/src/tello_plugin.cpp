@@ -194,7 +194,7 @@ namespace tello_gazebo
 
       std::string link_name{"base_link"};
 
-      // In theory we can move much of this config into the <ros> tag, but this appears unfinished in Crystal
+      // In theory we can move much of this config into the <ros> tag, but this appears unfinished in Dashing?
       if (sdf->HasElement("link_name")) {
         link_name = sdf->GetElement("link_name")->Get<std::string>();
       }
@@ -243,7 +243,7 @@ namespace tello_gazebo
                                                                                    std::placeholders::_3));
 
       // ROS subscription
-      cmd_vel_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>("cmd_vel",
+      cmd_vel_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", 10,
                                                                            std::bind(&TelloPlugin::cmd_vel_callback,
                                                                                      this, std::placeholders::_1));
 

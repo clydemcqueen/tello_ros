@@ -1,9 +1,38 @@
 #include "tello_driver.hpp"
 
+#include "ros2_shared/context_macros.hpp"
+
 using asio::ip::udp;
 
 namespace tello_driver
 {
+
+#define TELLO_DRIVER_ALL_PARAMS \
+  CXT_MACRO_MEMBER(               /* */ \
+  drone_ip, \
+  std::string, std::string("192.168.10.1")) \
+  CXT_MACRO_MEMBER(               /* */ \
+  drone_port, \
+  int, 8889) \
+  CXT_MACRO_MEMBER(               /* */ \
+  command_port, \
+  int, 38065) \
+  CXT_MACRO_MEMBER(               /* */ \
+  data_port, \
+  int, 8890) \
+  CXT_MACRO_MEMBER(               /* */ \
+  video_port, \
+  int, 11111) \
+  /* End of list */
+
+#undef CXT_MACRO_MEMBER
+#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_DEFINE_MEMBER(n, t, d)
+
+  struct TelloDriverContext
+  {
+    TELLO_DRIVER_ALL_PARAMS
+  };
+
 
   constexpr int SPIN_RATE = 100;            // Spin rate in Hz
   constexpr int32_t STATE_TIMEOUT = 4;      // We stopped receiving telemetry
@@ -15,7 +44,7 @@ namespace tello_driver
   {
     // ROS publishers
     image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", 1);
-    camera_info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 1);
+    camera_info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", rclcpp::SensorDataQoS());
     flight_data_pub_ = create_publisher<tello_msgs::msg::FlightData>("flight_data", 1);
     tello_response_pub_ = create_publisher<tello_msgs::msg::TelloResponse>("tello_response", 1);
 
@@ -30,29 +59,23 @@ namespace tello_driver
                                                                   std::bind(&TelloDriver::cmd_vel_callback, this,
                                                                             std::placeholders::_1));
 
-    // Parameters
-    std::string drone_ip;
-    int drone_port;
-    int command_port;
-    int data_port;
-    int video_port;
+    // Parameters - Allocate the parameter context as a local variable because it is not used outside this routine
+    TelloDriverContext cxt{};
+#undef CXT_MACRO_MEMBER
+#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_LOAD_PARAMETER((*this), cxt, n, t, d)
+    CXT_MACRO_INIT_PARAMETERS(TELLO_DRIVER_ALL_PARAMS, [this](){})
 
-    get_parameter_or("drone_ip", drone_ip, std::string("192.168.10.1"));
-    get_parameter_or("drone_port", drone_port, 8889);
+    // NOTE: This is not setup to dynamically update parameters after ths node is running.
 
-    get_parameter_or("command_port", command_port, 38065);
-    get_parameter_or("data_port", data_port, 8890);
-    get_parameter_or("video_port", video_port, 11111);
-
-    RCLCPP_INFO(get_logger(), "Drone at %s:%d", drone_ip.c_str(), drone_port);
-    RCLCPP_INFO(get_logger(), "Listening for command responses on localhost:%d", command_port);
-    RCLCPP_INFO(get_logger(), "Listening for data on localhost:%d", data_port);
-    RCLCPP_INFO(get_logger(), "Listening for video on localhost:%d", video_port);
+    RCLCPP_INFO(get_logger(), "Drone at %s:%d", cxt.drone_ip_.c_str(), cxt.drone_port_);
+    RCLCPP_INFO(get_logger(), "Listening for command responses on localhost:%d", cxt.command_port_);
+    RCLCPP_INFO(get_logger(), "Listening for data on localhost:%d", cxt.data_port_);
+    RCLCPP_INFO(get_logger(), "Listening for video on localhost:%d", cxt.video_port_);
 
     // Sockets
-    command_socket_ = std::make_unique<CommandSocket>(this, drone_ip, drone_port, command_port);
-    state_socket_ = std::make_unique<StateSocket>(this, data_port);
-    video_socket_ = std::make_unique<VideoSocket>(this, video_port);
+    command_socket_ = std::make_unique<CommandSocket>(this, cxt.drone_ip_, cxt.drone_port_, cxt.command_port_);
+    state_socket_ = std::make_unique<StateSocket>(this, cxt.data_port_);
+    video_socket_ = std::make_unique<VideoSocket>(this, cxt.video_port_);
   }
 
   TelloDriver::~TelloDriver()

@@ -102,7 +102,7 @@ from the source installation instructions.
 
 Install these additional packages:
 ~~~
-sudo apt install ros-dashing-cv-bridge
+sudo apt install ros-dashing-cv-bridge ros-dashing-camera-calibration-parsers
 ~~~
 
 ### 3. Install `tello_ros`

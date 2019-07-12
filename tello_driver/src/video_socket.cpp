@@ -1,8 +1,9 @@
 #include "tello_driver.hpp"
-#include "get_camera_info.cpp"
 
 #include <libavutil/frame.h>
 #include <opencv2/highgui.hpp>
+
+#include "camera_calibration_parsers/parse.h"
 
 namespace tello_driver
 {
@@ -16,9 +17,13 @@ namespace tello_driver
   // -- the h264 parser will consume the 8-byte packet, the 13-byte packet and the entire keyframe without
   //    generating a frame. Presumably the keyframe is stored in the parser and referenced later.
 
-  VideoSocket::VideoSocket(TelloDriver *driver, unsigned short video_port) : TelloSocket(driver, video_port)
+  VideoSocket::VideoSocket(TelloDriver *driver, unsigned short video_port, const std::string &camera_info_path) :
+    TelloSocket(driver, video_port)
   {
-    if (!get_camera_info(camera_info_msg_)) {
+    std::string camera_name;
+    if (camera_calibration_parsers::readCalibration(camera_info_path, camera_name, camera_info_msg_)) {
+      RCLCPP_INFO(driver_->get_logger(), "Parsed camera info for '%s'", camera_name.c_str());
+    } else {
       RCLCPP_ERROR(driver_->get_logger(), "Cannot get camera info");
     }
 
@@ -27,7 +32,7 @@ namespace tello_driver
     listen();
   }
 
-// Process a video packet from the drone
+  // Process a video packet from the drone
   void VideoSocket::process_packet(size_t r)
   {
     std::lock_guard<std::mutex> lock(mtx_);
@@ -62,7 +67,7 @@ namespace tello_driver
     }
   }
 
-// Decode frames
+  // Decode frames
   void VideoSocket::decode_frames()
   {
     size_t next = 0;

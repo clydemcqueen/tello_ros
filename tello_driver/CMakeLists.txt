@@ -28,6 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 # Find packages
 find_package(ament_cmake REQUIRED)
+find_package(camera_calibration_parsers REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -41,6 +42,7 @@ find_package(tello_msgs REQUIRED)
 include_directories(
   include
   h264decoder
+  ${camera_calibration_parsers_INCLUDE_DIRS}
   ${geometry_msgs_INCLUDE_DIRS}
   ${ros2_shared_INCLUDE_DIRS}
   ${sensor_msgs_INCLUDE_DIRS}
@@ -64,6 +66,7 @@ add_executable(tello_driver
 
 ament_target_dependencies(tello_driver
   cv_bridge
+  camera_calibration_parsers
   geometry_msgs
   OpenCV
   rclcpp

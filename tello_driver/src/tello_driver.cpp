@@ -8,21 +8,24 @@ namespace tello_driver
 {
 
 #define TELLO_DRIVER_ALL_PARAMS \
-  CXT_MACRO_MEMBER(               /* */ \
+  CXT_MACRO_MEMBER(               /* Send commands to this IP address */ \
   drone_ip, \
   std::string, std::string("192.168.10.1")) \
-  CXT_MACRO_MEMBER(               /* */ \
+  CXT_MACRO_MEMBER(               /* Send commands to this port */ \
   drone_port, \
   int, 8889) \
-  CXT_MACRO_MEMBER(               /* */ \
+  CXT_MACRO_MEMBER(               /* Send commands from this port */ \
   command_port, \
   int, 38065) \
-  CXT_MACRO_MEMBER(               /* */ \
+  CXT_MACRO_MEMBER(               /* Flight data will arrive at this port */ \
   data_port, \
   int, 8890) \
-  CXT_MACRO_MEMBER(               /* */ \
+  CXT_MACRO_MEMBER(               /* Video data will arrive at this port */ \
   video_port, \
   int, 11111) \
+  CXT_MACRO_MEMBER(               /* Camera calibration path */ \
+  camera_info_path, \
+  std::string, "install/tello_driver/share/tello_driver/cfg/camera_info.yaml") \
   /* End of list */
 
 #undef CXT_MACRO_MEMBER
@@ -75,7 +78,7 @@ namespace tello_driver
     // Sockets
     command_socket_ = std::make_unique<CommandSocket>(this, cxt.drone_ip_, cxt.drone_port_, cxt.command_port_);
     state_socket_ = std::make_unique<StateSocket>(this, cxt.data_port_);
-    video_socket_ = std::make_unique<VideoSocket>(this, cxt.video_port_);
+    video_socket_ = std::make_unique<VideoSocket>(this, cxt.video_port_, cxt.camera_info_path_);
   }
 
   TelloDriver::~TelloDriver()

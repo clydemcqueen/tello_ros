@@ -155,7 +155,7 @@ class VideoSocket : public TelloSocket
 {
 public:
 
-  VideoSocket(TelloDriver *driver, unsigned short video_port);
+  VideoSocket(TelloDriver *driver, unsigned short video_port, const std::string &camera_info_path);
 
 private:
 

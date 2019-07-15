@@ -36,8 +36,6 @@ namespace tello_driver
     TELLO_DRIVER_ALL_PARAMS
   };
 
-
-  constexpr int SPIN_RATE = 100;            // Spin rate in Hz
   constexpr int32_t STATE_TIMEOUT = 4;      // We stopped receiving telemetry
   constexpr int32_t VIDEO_TIMEOUT = 4;      // We stopped receiving video
   constexpr int32_t KEEP_ALIVE = 12;        // We stopped receiving input from other ROS nodes
@@ -61,9 +59,9 @@ namespace tello_driver
     cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
       "cmd_vel", std::bind(&TelloDriverNode::cmd_vel_callback, this, std::placeholders::_1));
 
-    // ROS timer TODO get rid of SPIN_RATE?
+    // ROS timer
     using namespace std::chrono_literals;
-    spin_timer_ = create_wall_timer(10ms, std::bind(&TelloDriverNode::spin_once, this));
+    spin_timer_ = create_wall_timer(1s, std::bind(&TelloDriverNode::timer_callback, this));
 
     // Parameters - Allocate the parameter context as a local variable because it is not used outside this routine
     TelloDriverContext cxt{};
@@ -120,19 +118,8 @@ namespace tello_driver
     }
   }
 
-  // Do work at SPIN_RATE Hz
-  void TelloDriverNode::spin_once()
-  {
-    static unsigned int counter = 0;
-    counter++;
-
-    if (counter % SPIN_RATE == 0) {
-      spin_1s();
-    }
-  }
-
-  // Do work every 1 second
-  void TelloDriverNode::spin_1s()
+  // Do work every second
+  void TelloDriverNode::timer_callback()
   {
     //====
     // Startup

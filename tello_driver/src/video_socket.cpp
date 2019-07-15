@@ -1,4 +1,4 @@
-#include "tello_driver.hpp"
+#include "tello_driver_node.hpp"
 
 #include <libavutil/frame.h>
 #include <opencv2/highgui.hpp>
@@ -17,7 +17,7 @@ namespace tello_driver
   // -- the h264 parser will consume the 8-byte packet, the 13-byte packet and the entire keyframe without
   //    generating a frame. Presumably the keyframe is stored in the parser and referenced later.
 
-  VideoSocket::VideoSocket(TelloDriver *driver, unsigned short video_port, const std::string &camera_info_path) :
+  VideoSocket::VideoSocket(TelloDriverNode *driver, unsigned short video_port, const std::string &camera_info_path) :
     TelloSocket(driver, video_port)
   {
     std::string camera_name;

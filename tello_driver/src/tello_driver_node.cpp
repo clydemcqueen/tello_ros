@@ -1,4 +1,4 @@
-#include "tello_driver.hpp"
+#include "tello_driver_node.hpp"
 
 #include "ros2_shared/context_macros.hpp"
 
@@ -43,7 +43,8 @@ namespace tello_driver
   constexpr int32_t KEEP_ALIVE = 12;        // We stopped receiving input from other ROS nodes
   constexpr int32_t COMMAND_TIMEOUT = 9;    // Drone didn't respond to a command
 
-  TelloDriver::TelloDriver() : Node("tello_driver")
+  TelloDriverNode::TelloDriverNode(const rclcpp::NodeOptions &options) :
+    Node("tello_driver", options)
   {
     // ROS publishers
     image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", 1);
@@ -52,21 +53,24 @@ namespace tello_driver
     tello_response_pub_ = create_publisher<tello_msgs::msg::TelloResponse>("tello_response", 1);
 
     // ROS service
-    command_srv_ = create_service<tello_msgs::srv::TelloAction>("tello_action",
-                                                                std::bind(&TelloDriver::command_callback, this,
-                                                                          std::placeholders::_1, std::placeholders::_2,
-                                                                          std::placeholders::_3));
+    command_srv_ = create_service<tello_msgs::srv::TelloAction>(
+      "tello_action", std::bind(&TelloDriverNode::command_callback, this,
+                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     // ROS subscription
-    cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>("cmd_vel",
-                                                                  std::bind(&TelloDriver::cmd_vel_callback, this,
-                                                                            std::placeholders::_1));
+    cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
+      "cmd_vel", std::bind(&TelloDriverNode::cmd_vel_callback, this, std::placeholders::_1));
+
+    // ROS timer TODO get rid of SPIN_RATE?
+    using namespace std::chrono_literals;
+    spin_timer_ = create_wall_timer(10ms, std::bind(&TelloDriverNode::spin_once, this));
 
     // Parameters - Allocate the parameter context as a local variable because it is not used outside this routine
     TelloDriverContext cxt{};
 #undef CXT_MACRO_MEMBER
 #define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_LOAD_PARAMETER((*this), cxt, n, t, d)
-    CXT_MACRO_INIT_PARAMETERS(TELLO_DRIVER_ALL_PARAMS, [this](){})
+    CXT_MACRO_INIT_PARAMETERS(TELLO_DRIVER_ALL_PARAMS, [this]()
+    {})
 
     // NOTE: This is not setup to dynamically update parameters after ths node is running.
 
@@ -81,11 +85,11 @@ namespace tello_driver
     video_socket_ = std::make_unique<VideoSocket>(this, cxt.video_port_, cxt.camera_info_path_);
   }
 
-  TelloDriver::~TelloDriver()
+  TelloDriverNode::~TelloDriverNode()
   {
   };
 
-  void TelloDriver::command_callback(
+  void TelloDriverNode::command_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<tello_msgs::srv::TelloAction::Request> request,
     std::shared_ptr<tello_msgs::srv::TelloAction::Response> response)
@@ -103,7 +107,7 @@ namespace tello_driver
     }
   }
 
-  void TelloDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+  void TelloDriverNode::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
   {
     // TODO cmd_vel should specify velocity, not joystick position
     if (!command_socket_->waiting()) {
@@ -116,8 +120,8 @@ namespace tello_driver
     }
   }
 
-// Do work at SPIN_RATE Hz
-  void TelloDriver::spin_once()
+  // Do work at SPIN_RATE Hz
+  void TelloDriverNode::spin_once()
   {
     static unsigned int counter = 0;
     counter++;
@@ -127,8 +131,8 @@ namespace tello_driver
     }
   }
 
-// Do work every 1 second
-  void TelloDriver::spin_1s()
+  // Do work every 1 second
+  void TelloDriverNode::spin_1s()
   {
     //====
     // Startup
@@ -186,30 +190,3 @@ namespace tello_driver
   }
 
 } // namespace tello_driver
-
-int main(int argc, char **argv)
-{
-  // Force flush of the stdout buffer
-  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
-
-  rclcpp::init(argc, argv);
-  rclcpp::Rate r(tello_driver::SPIN_RATE);
-  auto node = std::make_shared<tello_driver::TelloDriver>();
-  auto result = rcutils_logging_set_logger_level(node->get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG);
-
-  while (rclcpp::ok()) {
-    // Do our work
-    node->spin_once();
-
-    // Respond to incoming ROS messages
-    rclcpp::spin_some(node);
-
-    // Wait
-    r.sleep();
-  }
-
-  // Shut down ROS
-  rclcpp::shutdown();
-
-  return 0;
-}

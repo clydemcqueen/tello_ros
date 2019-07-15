@@ -56,15 +56,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 # Tello driver node
 #=============
 
-add_executable(tello_driver
-  src/tello_driver.cpp
+add_library(tello_driver_node SHARED
+  src/tello_driver_node.cpp
   src/tello_socket.cpp
   src/command_socket.cpp
   src/state_socket.cpp
   src/video_socket.cpp
   h264decoder/h264decoder.cpp)
 
-ament_target_dependencies(tello_driver
+ament_target_dependencies(tello_driver_node
   cv_bridge
   camera_calibration_parsers
   geometry_msgs
@@ -76,10 +76,10 @@ ament_target_dependencies(tello_driver
   tello_msgs)
 
 # Can't find_package(ffmpeg), so ament_target_dependencies won't work
-target_link_libraries(tello_driver avcodec avutil swscale)
+target_link_libraries(tello_driver_node avcodec avutil swscale)
 
 # Tell Asio to use std::, not boost::
-target_compile_definitions(tello_driver
+target_compile_definitions(tello_driver_node
   PRIVATE ASIO_STANDALONE
   PRIVATE ASIO_HAS_STD_CHRONO)
 
@@ -99,24 +99,65 @@ target_compile_definitions(tello_emulator
 # Tello joy node
 #=============
 
-add_executable(tello_joy src/tello_joy.cpp)
+add_library(tello_joy_node SHARED
+  src/tello_joy_node.cpp)
 
-ament_target_dependencies(tello_joy
+ament_target_dependencies(tello_joy_node
   geometry_msgs
   rclcpp
   sensor_msgs
   tello_msgs)
 
 #=============
+# Export incantations, see https://github.com/ros2/demos/blob/master/composition/CMakeLists.txt
+#=============
+
+if (NOT WIN32)
+  ament_environment_hooks("${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH}")
+endif ()
+
+#=============
+# Tello driver main
+#=============
+
+add_executable(tello_driver_main
+  src/tello_driver_main.cpp)
+
+target_link_libraries(tello_driver_main
+  tello_driver_node)
+
+ament_target_dependencies(tello_driver_main
+  rclcpp)
+
+#=============
+# Tello joy and driver main
+#=============
+
+add_executable(tello_joy_and_driver_main
+  src/tello_joy_main.cpp)
+
+target_link_libraries(tello_joy_and_driver_main
+  tello_joy_node
+  tello_driver_node)
+
+ament_target_dependencies(tello_joy_and_driver_main
+  rclcpp)
+
+#=============
 # Install
 #=============
 
-# Install targets
+# Install nodes
 install(
-  TARGETS
-  tello_driver
-  tello_emulator
-  tello_joy
+  TARGETS tello_driver_node tello_joy_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Install executables
+install(
+  TARGETS tello_driver_main tello_joy_and_driver_main tello_emulator
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -17,7 +17,7 @@ endif ()
 
 # Emulate colcon
 if ($ENV{CLION_IDE})
-  message("Running inside CLion")
+  message(STATUS "Running inside CLion")
   set(tello_msgs_DIR "${PROJECT_SOURCE_DIR}/../../../install/tello_msgs/share/tello_msgs/cmake")
   set(ros2_shared_DIR "${PROJECT_SOURCE_DIR}/../../../install/ros2_shared/share/ros2_shared/cmake")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRUN_INSIDE_CLION")
@@ -29,28 +29,29 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 # Find packages
 find_package(ament_cmake REQUIRED)
 find_package(camera_calibration_parsers REQUIRED)
+find_package(class_loader REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(ros2_shared REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(tello_msgs REQUIRED)
 
-# Local includes
+# Package includes not needed for CMake >= 2.8.11
 include_directories(
   include
   h264decoder
-  ${camera_calibration_parsers_INCLUDE_DIRS}
-  ${geometry_msgs_INCLUDE_DIRS}
   ${ros2_shared_INCLUDE_DIRS}
-  ${sensor_msgs_INCLUDE_DIRS}
-  ${std_msgs_INCLUDE_DIRS}
   ${tello_msgs_INCLUDE_DIRS})
 
 # h264decoder uses deprecated ffmpeg calls, turn off the warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+
+# Create ament index resource which references the libraries in the binary dir
+set(node_plugins "")
 
 #=============
 # Tello driver node
@@ -64,9 +65,13 @@ add_library(tello_driver_node SHARED
   src/video_socket.cpp
   h264decoder/h264decoder.cpp)
 
+target_compile_definitions(tello_driver_node
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+
 ament_target_dependencies(tello_driver_node
-  cv_bridge
   camera_calibration_parsers
+  class_loader
+  cv_bridge
   geometry_msgs
   OpenCV
   rclcpp
@@ -74,6 +79,9 @@ ament_target_dependencies(tello_driver_node
   sensor_msgs
   std_msgs
   tello_msgs)
+
+rclcpp_components_register_nodes(tello_driver_node "tello_driver::TelloDriverNode")
+set(node_plugins "${node_plugins}tello_driver::TelloDriverNode;$<TARGET_FILE:tello_driver_node>\n")
 
 # Can't find_package(ffmpeg), so ament_target_dependencies won't work
 target_link_libraries(tello_driver_node avcodec avutil swscale)
@@ -102,11 +110,18 @@ target_compile_definitions(tello_emulator
 add_library(tello_joy_node SHARED
   src/tello_joy_node.cpp)
 
+target_compile_definitions(tello_joy_node
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+
 ament_target_dependencies(tello_joy_node
+  class_loader
   geometry_msgs
   rclcpp
   sensor_msgs
   tello_msgs)
+
+rclcpp_components_register_nodes(tello_joy_node "tello_joy::TelloJoyNode")
+set(node_plugins "${node_plugins}tello_joy::TelloJoyNode;$<TARGET_FILE:tello_joy_node>\n")
 
 #=============
 # Export incantations, see https://github.com/ros2/demos/blob/master/composition/CMakeLists.txt

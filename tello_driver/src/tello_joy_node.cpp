@@ -44,5 +44,8 @@ namespace tello_joy
     }
   }
 
-
 } // namespace tello_joy
+
+#include "rclcpp_components/register_node_macro.hpp"
+
+RCLCPP_COMPONENTS_REGISTER_NODE(tello_joy::TelloJoyNode)

@@ -57,7 +57,7 @@ set(node_plugins "")
 # Tello driver node
 #=============
 
-add_library(tello_driver_node SHARED
+set(DRIVER_NODE_SOURCES
   src/tello_driver_node.cpp
   src/tello_socket.cpp
   src/command_socket.cpp
@@ -65,10 +65,7 @@ add_library(tello_driver_node SHARED
   src/video_socket.cpp
   h264decoder/h264decoder.cpp)
 
-target_compile_definitions(tello_driver_node
-  PRIVATE "COMPOSITION_BUILDING_DLL")
-
-ament_target_dependencies(tello_driver_node
+set(DRIVER_NODE_DEPS
   camera_calibration_parsers
   class_loader
   cv_bridge
@@ -80,11 +77,26 @@ ament_target_dependencies(tello_driver_node
   std_msgs
   tello_msgs)
 
+set(DRIVER_NODE_LIBS
+  avcodec
+  avutil
+  swscale)
+
+add_library(tello_driver_node SHARED
+  ${DRIVER_NODE_SOURCES})
+
+target_compile_definitions(tello_driver_node
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+
+ament_target_dependencies(tello_driver_node
+  ${DRIVER_NODE_DEPS})
+
 rclcpp_components_register_nodes(tello_driver_node "tello_driver::TelloDriverNode")
 set(node_plugins "${node_plugins}tello_driver::TelloDriverNode;$<TARGET_FILE:tello_driver_node>\n")
 
 # Can't find_package(ffmpeg), so ament_target_dependencies won't work
-target_link_libraries(tello_driver_node avcodec avutil swscale)
+target_link_libraries(tello_driver_node
+  ${DRIVER_NODE_LIBS})
 
 # Tell Asio to use std::, not boost::
 target_compile_definitions(tello_driver_node
@@ -107,18 +119,24 @@ target_compile_definitions(tello_emulator
 # Tello joy node
 #=============
 
-add_library(tello_joy_node SHARED
+set(JOY_NODE_SOURCES
   src/tello_joy_node.cpp)
 
-target_compile_definitions(tello_joy_node
-  PRIVATE "COMPOSITION_BUILDING_DLL")
-
-ament_target_dependencies(tello_joy_node
+set(JOY_NODE_DEPS
   class_loader
   geometry_msgs
   rclcpp
   sensor_msgs
   tello_msgs)
+
+add_library(tello_joy_node SHARED
+  ${JOY_NODE_SOURCES})
+
+target_compile_definitions(tello_joy_node
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+
+ament_target_dependencies(tello_joy_node
+  ${JOY_NODE_DEPS})
 
 rclcpp_components_register_nodes(tello_joy_node "tello_joy::TelloJoyNode")
 set(node_plugins "${node_plugins}tello_joy::TelloJoyNode;$<TARGET_FILE:tello_joy_node>\n")
@@ -132,31 +150,35 @@ if (NOT WIN32)
 endif ()
 
 #=============
-# Tello driver main
+# Tello driver main, statically linked to make IDE debugging easier
 #=============
 
 add_executable(tello_driver_main
-  src/tello_driver_main.cpp)
-
-target_link_libraries(tello_driver_main
-  tello_driver_node)
+  src/tello_driver_main.cpp
+  ${DRIVER_NODE_SOURCES})
 
 ament_target_dependencies(tello_driver_main
-  rclcpp)
+  ${DRIVER_NODE_DEPS})
+
+# Can't find_package(ffmpeg), so ament_target_dependencies won't work
+target_link_libraries(tello_driver_main
+  ${DRIVER_NODE_LIBS})
+
+# Tell Asio to use std::, not boost::
+target_compile_definitions(tello_driver_main
+  PRIVATE ASIO_STANDALONE
+  PRIVATE ASIO_HAS_STD_CHRONO)
 
 #=============
-# Tello joy and driver main
+# Tello joy main, statically linked to make IDE debugging easier
 #=============
 
-add_executable(tello_joy_and_driver_main
-  src/tello_joy_main.cpp)
+add_executable(tello_joy_main
+  src/tello_joy_main.cpp
+  ${JOY_NODE_SOURCES})
 
-target_link_libraries(tello_joy_and_driver_main
-  tello_joy_node
-  tello_driver_node)
-
-ament_target_dependencies(tello_joy_and_driver_main
-  rclcpp)
+ament_target_dependencies(tello_joy_main
+  ${JOY_NODE_DEPS})
 
 #=============
 # Install
@@ -172,7 +194,7 @@ install(
 
 # Install executables
 install(
-  TARGETS tello_driver_main tello_joy_and_driver_main tello_emulator
+  TARGETS tello_driver_main tello_joy_main tello_emulator
   DESTINATION lib/${PROJECT_NAME}
 )
 

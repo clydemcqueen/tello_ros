@@ -14,6 +14,7 @@ int main(int argc, char **argv)
   rclcpp::executors::SingleThreadedExecutor executor;
 
   // Use IPC
+  // Note: this is a NOP, as there's only 1 node in this process
   rclcpp::NodeOptions options{};
   options.use_intra_process_comms(true);
 

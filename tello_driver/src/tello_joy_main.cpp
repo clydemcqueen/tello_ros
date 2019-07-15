@@ -1,4 +1,3 @@
-#include "tello_driver_node.hpp"
 #include "tello_joy_node.hpp"
 
 // Launch TelloDriver with use_intra_process_comms=true
@@ -15,12 +14,9 @@ int main(int argc, char **argv)
   rclcpp::executors::SingleThreadedExecutor executor;
 
   // Use IPC
+  // Note: this is a NOP, as there's only 1 node in this process
   rclcpp::NodeOptions options{};
   options.use_intra_process_comms(true);
-
-  // Create and add driver node
-  auto driver_node = std::make_shared<tello_driver::TelloDriverNode>(options);
-  executor.add_node(driver_node);
 
   // Create and add joy node
   auto joy_node = std::make_shared<tello_joy::TelloJoyNode>(options);

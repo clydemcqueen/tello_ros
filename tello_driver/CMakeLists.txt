@@ -43,9 +43,7 @@ find_package(tello_msgs REQUIRED)
 # Package includes not needed for CMake >= 2.8.11
 include_directories(
   include
-  h264decoder
-  ${ros2_shared_INCLUDE_DIRS}
-  ${tello_msgs_INCLUDE_DIRS})
+  h264decoder)
 
 # h264decoder uses deprecated ffmpeg calls, turn off the warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")

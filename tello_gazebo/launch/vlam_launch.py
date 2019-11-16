@@ -44,7 +44,7 @@ def generate_launch_description():
              node_namespace=drones[0]),
 
         # Joystick controller, generates /namespace/cmd_vel messages
-        Node(package='tello_driver', node_executable='tello_joy', output='screen',
+        Node(package='tello_driver', node_executable='tello_joy_main', output='screen',
              node_namespace=drones[0]),
     ]
 

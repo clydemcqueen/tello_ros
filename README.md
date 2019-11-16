@@ -23,9 +23,8 @@ The driver communicates with the drone using the Tello SDK, which has several ad
 arbitrary strings to the drone.
 
 Many Tello commands (e.g., `takeoff` and `land`) are long-running, and the drone returns `ok` or `error` on completion.
-For now, the driver provides the ROS service `tello_command` to initiate commands,
+The driver provides the ROS service `tello_command` to initiate commands,
 and the corresponding ROS topic `tello_response` to indicate command completion.
-This may change when ROS2-Dashing is released.
 
 Per ROS convention, the driver also responds to `Twist` messages on the `cmd_vel` topic.
 These are translated into `rc` commands and sent to the drone.
@@ -94,7 +93,7 @@ sudo apt install libasio-dev
 
 ### 2. Set up your ROS environment
 
-[Install ROS2 Dashing Diademata](https://index.ros.org/doc/ros2/Installation/) with the `ros-dashing-desktop` option.
+[Install ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/) with the `ros-eloquent-desktop` option.
 
 If you install binaries, be sure to also install the 
 [development tools and ROS tools](https://github.com/ros2/ros2/wiki/Linux-Development-Setup#install-development-tools-and-ros-tools)
@@ -102,7 +101,7 @@ from the source installation instructions.
 
 Install these additional packages:
 ~~~
-sudo apt install ros-dashing-cv-bridge ros-dashing-camera-calibration-parsers
+sudo apt install ros-eloquent-cv-bridge ros-eloquent-camera-calibration-parsers
 ~~~
 
 ### 3. Install `tello_ros`
@@ -114,7 +113,7 @@ cd ~/tello_ros_ws/src
 git clone https://github.com/clydemcqueen/tello_ros.git
 git clone https://github.com/ptrmu/ros2_shared.git
 cd ..
-source /opt/ros/dashing/setup.bash
+source /opt/ros/eloquent/setup.bash
 # If you didn't intall Gazebo, skip tello_gazebo while building:
 colcon build --event-handlers console_direct+ --packages-skip tello_gazebo
 ~~~

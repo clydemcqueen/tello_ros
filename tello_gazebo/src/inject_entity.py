@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """Inject an SDF or URDF file into Gazebo"""
 

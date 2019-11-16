@@ -57,7 +57,7 @@ namespace tello_driver
 
     // ROS subscription
     cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
-      "cmd_vel", std::bind(&TelloDriverNode::cmd_vel_callback, this, std::placeholders::_1));
+      "cmd_vel", 1, std::bind(&TelloDriverNode::cmd_vel_callback, this, std::placeholders::_1));
 
     // ROS timer
     using namespace std::chrono_literals;

@@ -1,4 +1,4 @@
-#include "tello_driver.hpp"
+#include "tello_driver_node.hpp"
 
 #include <regex>
 
@@ -10,7 +10,7 @@ namespace tello_driver
   // * some future SDK version might introduce new field types, so don't parse undocumented fields
   // * send the raw string as well
 
-  StateSocket::StateSocket(TelloDriver *driver, unsigned short data_port) : TelloSocket(driver, data_port)
+  StateSocket::StateSocket(TelloDriverNode *driver, unsigned short data_port) : TelloSocket(driver, data_port)
   {
     buffer_ = std::vector<unsigned char>(1024);
     listen();

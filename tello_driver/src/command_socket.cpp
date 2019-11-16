@@ -1,9 +1,9 @@
-#include "tello_driver.hpp"
+#include "tello_driver_node.hpp"
 
 namespace tello_driver
 {
 
-  CommandSocket::CommandSocket(TelloDriver *driver, std::string drone_ip,
+  CommandSocket::CommandSocket(TelloDriverNode *driver, std::string drone_ip,
                                unsigned short drone_port, unsigned short command_port) :
     TelloSocket(driver, command_port),
     remote_endpoint_(asio::ip::address_v4::from_string(drone_ip), drone_port),

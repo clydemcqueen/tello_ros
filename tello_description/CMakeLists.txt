@@ -20,7 +20,16 @@ foreach (INDEX RANGE 0 8)
     set(TOPIC_NS "drone${INDEX}")
   endif ()
   set(URDF_FILE "${CMAKE_CURRENT_BINARY_DIR}/urdf/tello${SUFFIX}.urdf")
-  configure_file("urdf/tello.xml" ${URDF_FILE})
+  add_custom_command(
+    OUTPUT ${URDF_FILE}
+    COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/src/replace.py"
+    "${CMAKE_CURRENT_SOURCE_DIR}/urdf/tello.xml" "suffix=${SUFFIX}" "topic_ns=${TOPIC_NS}" ">" "${URDF_FILE}"
+    DEPENDS urdf/tello.xml
+    COMMENT "Generate ${URDF_FILE}"
+    VERBATIM
+  )
+  # TODO investigate why configure_file isn't working
+  # configure_file("urdf/tello.xml" ${URDF_FILE})
   add_custom_target(generate_urdf${SUFFIX} ALL DEPENDS ${URDF_FILE})
 endforeach ()
 

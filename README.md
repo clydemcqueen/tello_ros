@@ -118,9 +118,7 @@ source /opt/ros/eloquent/setup.bash
 colcon build --event-handlers console_direct+ --packages-skip tello_gazebo
 ~~~
 
-## Running
-
-### Teleop
+## Teleop
 
 The driver provides a simple launch file that will allow you to fly the drone using a wired XBox One gamepad.
 
@@ -147,12 +145,40 @@ ros2 topic pub /cmd_vel geometry_msgs/Twist  # Sends rc 0 0 0 0
 ros2 topic pub /cmd_vel geometry_msgs/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.2}}"
 ~~~~
 
-### Devices tested
+## Devices tested
 
 * Tello
   * Firmware v01.04.35.01, SDK v1.3
 * Tello EDU
   * Firmware v02.04.69.03, SDK v2.0
+
+## Versions and branches
+
+`tello_ros` was developed along with several other projects while ROS2 was rapidly changing.
+All of the related projects adopted similar conventions around branch names:
+* the `master` branch works with the latest ROS2 release (Eloquent as of this writing)
+* there may be branches for older ROS2 versions, such as `crystal` or `dashing`
+
+The following projects and branches were tested together:
+
+* ROS Dashing:
+  * git clone https://github.com/ptrmu/ros2_shared.git
+  * git clone https://github.com/ptrmu/fiducial_vlam.git
+  * git clone https://github.com/clydemcqueen/tello_ros.git -b dashing
+  * git clone https://github.com/clydemcqueen/flock2.git -b dashing
+
+* ROS2 Eloquent with fiducial_vlam:
+  * git clone https://github.com/ptrmu/ros2_shared.git
+  * git clone https://github.com/ptrmu/fiducial_vlam.git
+  * git clone https://github.com/clydemcqueen/tello_ros.git
+  * git clone https://github.com/clydemcqueen/flock2.git
+
+* ROS2 Eloquent with fiducial_vlam_sam:
+  * git clone https://github.com/ptrmu/ros2_shared.git
+  * git clone https://github.com/ptrmu/fiducial_vlam_sam.git
+  * git clone https://github.com/clydemcqueen/sim_fiducial.git
+  * git clone https://github.com/clydemcqueen/tello_ros.git
+  * git clone https://github.com/clydemcqueen/flock2.git
 
 ## Credits
 

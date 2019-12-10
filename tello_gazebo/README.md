@@ -19,6 +19,10 @@ Add transformations.py v2018.9.5 to your Python environment.
     
 Run `gazebo` on the command line, fix any problems before continuing.
 
+#### Additional Python packages
+
+    pip3 install numpy transformations
+
 #### Additional ROS packages
 
     sudo apt install ros-dashing-gazebo-ros-pkgs ros-dashing-cv-bridge

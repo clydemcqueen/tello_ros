@@ -101,8 +101,10 @@ namespace tello_driver
             std_msgs::msg::Header header{};
             header.frame_id = "camera_frame";
             header.stamp = stamp;
-            cv_bridge::CvImage image{header, sensor_msgs::image_encodings::BGR8, mat};
-            driver_->image_pub_->publish(image.toImageMsg());
+            cv_bridge::CvImage cv_image{header, sensor_msgs::image_encodings::BGR8, mat};
+            sensor_msgs::msg::Image sensor_image_msg;
+            cv_image.toImageMsg(sensor_image_msg);
+            driver_->image_pub_->publish(sensor_image_msg);
           }
 
           if (driver_->count_subscribers(driver_->camera_info_pub_->get_topic_name()) > 0) {

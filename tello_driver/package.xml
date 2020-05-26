@@ -20,7 +20,6 @@
     <depend>camera_calibration_parsers</depend>
     <depend>class_loader</depend>
     <depend>cv_bridge</depend>
-    <depend>OpenCV</depend>
     <depend>rclcpp</depend>
     <depend>geometry_msgs</depend>
     <depend>ros2_shared</depend>

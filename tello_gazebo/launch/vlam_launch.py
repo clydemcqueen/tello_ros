@@ -31,8 +31,8 @@ def generate_launch_description():
         ], output='screen'),
 
         # Load and publish a known map
-        Node(package='fiducial_vlam', node_executable='vmap_node', output='screen',
-             node_name='vmap_node', parameters=[{
+        Node(package='fiducial_vlam', node_executable='vmap_main', output='screen',
+             node_name='vmap_main', parameters=[{
                 'publish_tfs': 1,  # Publish marker /tf
                 'marker_length': 0.1778,  # Marker length
                 'marker_map_load_full_filename': map_path,  # Load a pre-built map from disk
@@ -59,8 +59,8 @@ def generate_launch_description():
                  arguments=[urdf_path, '0', str(idx), '1', '0']),
 
             # Localize this drone against the map
-            Node(package='fiducial_vlam', node_executable='vloc_node', output='screen',
-                 node_name='vloc_node', node_namespace=namespace, parameters=[{
+            Node(package='fiducial_vlam', node_executable='vloc_main', output='screen',
+                 node_name='vloc_main', node_namespace=namespace, parameters=[{
                     'publish_tfs': 1,
                     'base_frame_id': 'base_link' + suffix,
                     't_camera_base_z': -0.035,

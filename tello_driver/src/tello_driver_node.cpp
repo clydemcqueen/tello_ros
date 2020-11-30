@@ -28,12 +28,11 @@ namespace tello_driver
   std::string, "install/tello_driver/share/tello_driver/cfg/camera_info.yaml") \
   /* End of list */
 
-#undef CXT_MACRO_MEMBER
-#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_DEFINE_MEMBER(n, t, d)
-
   struct TelloDriverContext
   {
-    TELLO_DRIVER_ALL_PARAMS
+#undef CXT_MACRO_MEMBER
+#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_DEFINE_MEMBER(n, t, d)
+    CXT_MACRO_DEFINE_MEMBERS(TELLO_DRIVER_ALL_PARAMS)
   };
 
   constexpr int32_t STATE_TIMEOUT = 4;      // We stopped receiving telemetry

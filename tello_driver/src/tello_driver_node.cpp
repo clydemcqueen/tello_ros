@@ -8,24 +8,16 @@ namespace tello_driver
 {
 
 #define TELLO_DRIVER_ALL_PARAMS \
-  CXT_MACRO_MEMBER(               /* Send commands to this IP address */ \
-  drone_ip, \
-  std::string, std::string("192.168.10.1")) \
-  CXT_MACRO_MEMBER(               /* Send commands to this port */ \
-  drone_port, \
-  int, 8889) \
-  CXT_MACRO_MEMBER(               /* Send commands from this port */ \
-  command_port, \
-  int, 38065) \
-  CXT_MACRO_MEMBER(               /* Flight data will arrive at this port */ \
-  data_port, \
-  int, 8890) \
-  CXT_MACRO_MEMBER(               /* Video data will arrive at this port */ \
-  video_port, \
-  int, 11111) \
-  CXT_MACRO_MEMBER(               /* Camera calibration path */ \
-  camera_info_path, \
-  std::string, "install/tello_driver/share/tello_driver/cfg/camera_info.yaml") \
+  CXT_MACRO_MEMBER(image_raw_frame_id, std::string, std::string("camera_frame")) /* Frame for the published image */ \
+  CXT_MACRO_MEMBER(drone_ip, std::string, std::string("192.168.10.1")) /* Send commands to this IP address */ \
+  CXT_MACRO_MEMBER(drone_port, int, 8889)                 /* Send commands to this port */ \
+  CXT_MACRO_MEMBER(command_port, int, 38065)              /* Send commands from this port */ \
+  CXT_MACRO_MEMBER(data_port, int, 8890)                  /* Flight data will arrive at this port */ \
+  CXT_MACRO_MEMBER(video_port, int, 11111)                /* Video data will arrive at this port */ \
+  CXT_MACRO_MEMBER(camera_info_path, std::string, \
+    "install/tello_driver/share/tello_driver/cfg/camera_info.yaml") /* Camera calibration path */ \
+  CXT_MACRO_MEMBER(pub_image_raw_best_effort_not_reliable, int, 0)  /* publish image_raw message with best_effort (gazebo camera, tello_driver)  */ \
+  CXT_MACRO_MEMBER(pub_camera_info_best_effort_not_reliable, int, 1)/* publish camera_info message with best_effort (gazebo camera, tello_driver)  */ \
   /* End of list */
 
   struct TelloDriverContext
@@ -43,9 +35,32 @@ namespace tello_driver
   TelloDriverNode::TelloDriverNode(const rclcpp::NodeOptions &options) :
     Node("tello_driver", options)
   {
+    // Parameters - Allocate the parameter context as a local variable because it is not used outside this routine
+    TelloDriverContext cxt{};
+#undef CXT_MACRO_MEMBER
+#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_LOAD_PARAMETER((*this), cxt, n, t, d)
+    CXT_MACRO_INIT_PARAMETERS(TELLO_DRIVER_ALL_PARAMS, [this]()
+    {})
+
+#undef CXT_MACRO_MEMBER
+#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_LOG_SORTED_PARAMETER(cxt, n, t, d)
+    CXT_MACRO_LOG_SORTED_PARAMETERS(RCLCPP_INFO, get_logger(), "tello_ros", TELLO_DRIVER_ALL_PARAMS)
+
+#undef CXT_MACRO_MEMBER
+#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_CHECK_CMDLINE_PARAMETER(n, t, d)
+    CXT_MACRO_CHECK_CMDLINE_PARAMETERS((*this), TELLO_DRIVER_ALL_PARAMS)
+
     // ROS publishers
-    image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", 1);
-    camera_info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", rclcpp::SensorDataQoS());
+    image_pub_ =
+      create_publisher<sensor_msgs::msg::Image>("image_raw",
+                                                cxt.pub_image_raw_best_effort_not_reliable_ ?
+                                                rclcpp::QoS{rclcpp::SensorDataQoS(rclcpp::KeepLast(1))} :
+                                                rclcpp::QoS{rclcpp::ServicesQoS()});
+    camera_info_pub_ =
+      create_publisher<sensor_msgs::msg::CameraInfo>("camera_info",
+                                                     cxt.pub_camera_info_best_effort_not_reliable_ ?
+                                                     rclcpp::QoS{rclcpp::SensorDataQoS(rclcpp::KeepLast(1))} :
+                                                     rclcpp::QoS{rclcpp::ServicesQoS()});
     flight_data_pub_ = create_publisher<tello_msgs::msg::FlightData>("flight_data", 1);
     tello_response_pub_ = create_publisher<tello_msgs::msg::TelloResponse>("tello_response", 1);
 
@@ -62,13 +77,6 @@ namespace tello_driver
     using namespace std::chrono_literals;
     spin_timer_ = create_wall_timer(1s, std::bind(&TelloDriverNode::timer_callback, this));
 
-    // Parameters - Allocate the parameter context as a local variable because it is not used outside this routine
-    TelloDriverContext cxt{};
-#undef CXT_MACRO_MEMBER
-#define CXT_MACRO_MEMBER(n, t, d) CXT_MACRO_LOAD_PARAMETER((*this), cxt, n, t, d)
-    CXT_MACRO_INIT_PARAMETERS(TELLO_DRIVER_ALL_PARAMS, [this]()
-    {})
-
     // NOTE: This is not setup to dynamically update parameters after ths node is running.
 
     RCLCPP_INFO(get_logger(), "Drone at %s:%d", cxt.drone_ip_.c_str(), cxt.drone_port_);
@@ -79,7 +87,7 @@ namespace tello_driver
     // Sockets
     command_socket_ = std::make_unique<CommandSocket>(this, cxt.drone_ip_, cxt.drone_port_, cxt.command_port_);
     state_socket_ = std::make_unique<StateSocket>(this, cxt.data_port_);
-    video_socket_ = std::make_unique<VideoSocket>(this, cxt.video_port_, cxt.camera_info_path_);
+    video_socket_ = std::make_unique<VideoSocket>(this, cxt.video_port_, cxt.camera_info_path_, cxt.image_raw_frame_id_);
   }
 
   TelloDriverNode::~TelloDriverNode()

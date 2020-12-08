@@ -18,9 +18,9 @@ RUN yes | pip3 install 'transformations==2018.9.5'
 
 WORKDIR /work/tello_ros_ws/src
 
-RUN git clone https://github.com/clydemcqueen/tello_ros.git
-RUN git clone https://github.com/ptrmu/ros2_shared.git
-RUN git clone https://github.com/ptrmu/fiducial_vlam.git
+RUN git clone https://github.com/clydemcqueen/tello_ros.git -b eloquent
+RUN git clone https://github.com/ptrmu/ros2_shared.git -b eloquent
+RUN git clone https://github.com/ptrmu/fiducial_vlam.git -b eloquent
 
 WORKDIR /work/tello_ros_ws
 

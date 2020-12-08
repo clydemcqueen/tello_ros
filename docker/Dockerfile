@@ -1,13 +1,13 @@
 # To build:
-# docker build --tag tello_ros:eloquent .
+# docker build --pull --no-cache --tag tello_ros:foxy .
 
 # To run:
-# docker run -it tello_ros:eloquent bash
+# docker run -it tello_ros:foxy bash
 
 # I'm using this for smoke tests
 # To run tello_ros in a docker container you will need to set up ports, x-windows, etc.
 
-FROM osrf/ros:eloquent-desktop
+FROM osrf/ros:foxy-desktop
 
 RUN apt-get update
 RUN apt-get upgrade -y
@@ -26,4 +26,4 @@ WORKDIR /work/tello_ros_ws
 
 RUN rosdep install -y --from-paths . --ignore-src
 
-RUN /bin/bash -c "source /opt/ros/eloquent/setup.bash && colcon build"
+RUN /bin/bash -c "source /opt/ros/foxy/setup.bash && colcon build"

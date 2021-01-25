@@ -168,7 +168,8 @@ namespace tello_driver
   {
   public:
 
-    VideoSocket(TelloDriverNode *driver, unsigned short video_port, const std::string &camera_info_path);
+    VideoSocket(TelloDriverNode *driver, unsigned short video_port,
+                const std::string &camera_info_path, const std::string &image_raw_frame_id);
 
   private:
 
@@ -176,6 +177,7 @@ namespace tello_driver
 
     void decode_frames();
 
+    const std::string image_raw_frame_id_;    // Frame id for the images
     std::vector<unsigned char> seq_buffer_;   // Collect video packets into a larger sequence
     size_t seq_buffer_next_ = 0;              // Next available spot in the sequence buffer
     int seq_buffer_num_packets_ = 0;          // How many packets we've collected, for debugging

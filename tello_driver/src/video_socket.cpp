@@ -17,8 +17,10 @@ namespace tello_driver
   // -- the h264 parser will consume the 8-byte packet, the 13-byte packet and the entire keyframe without
   //    generating a frame. Presumably the keyframe is stored in the parser and referenced later.
 
-  VideoSocket::VideoSocket(TelloDriverNode *driver, unsigned short video_port, const std::string &camera_info_path) :
-    TelloSocket(driver, video_port)
+  VideoSocket::VideoSocket(TelloDriverNode *driver, unsigned short video_port,
+                           const std::string &camera_info_path, const std::string &image_raw_frame_id) :
+    TelloSocket(driver, video_port),
+    image_raw_frame_id_(image_raw_frame_id)
   {
     std::string camera_name;
     if (camera_calibration_parsers::readCalibration(camera_info_path, camera_name, camera_info_msg_)) {
@@ -99,7 +101,7 @@ namespace tello_driver
 
           if (driver_->count_subscribers(driver_->image_pub_->get_topic_name()) > 0) {
             std_msgs::msg::Header header{};
-            header.frame_id = "camera_frame";
+            header.frame_id = image_raw_frame_id_;
             header.stamp = stamp;
             cv_bridge::CvImage cv_image{header, sensor_msgs::image_encodings::BGR8, mat};
             sensor_msgs::msg::Image sensor_image_msg;
@@ -109,6 +111,7 @@ namespace tello_driver
 
           if (driver_->count_subscribers(driver_->camera_info_pub_->get_topic_name()) > 0) {
             camera_info_msg_.header.stamp = stamp;
+            camera_info_msg_.header.frame_id = image_raw_frame_id_;
             driver_->camera_info_pub_->publish(camera_info_msg_);
           }
         }

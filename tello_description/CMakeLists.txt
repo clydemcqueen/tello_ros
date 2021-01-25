@@ -20,7 +20,7 @@ foreach (INDEX RANGE 0 8)
     set(TOPIC_NS "drone${INDEX}")
   endif ()
   set(URDF_FILE "${CMAKE_CURRENT_BINARY_DIR}/urdf/tello${SUFFIX}.urdf")
-  message("creating rules for ${URDF_FILE}")
+  message(STATUS "creating rules for ${URDF_FILE}")
   add_custom_command(
     OUTPUT ${URDF_FILE}
     COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/src/replace.py"

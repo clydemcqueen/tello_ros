@@ -84,7 +84,7 @@ The defaults work well for a single Tello drone.
 
 ### 1. Set up your Linux environment
 
-Set up a Ubuntu 18.04 box or VM. This should include ffmpeg 3.4.4 and OpenCV 3.2.
+Set up a Ubuntu 20.04 box or VM.
 
 Also install asio:
 ~~~

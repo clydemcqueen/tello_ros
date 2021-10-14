@@ -31,8 +31,8 @@ def generate_launch_description():
         ], output='screen'),
 
         # Load and publish a known map
-        Node(package='fiducial_vlam', node_executable='vmap_main', output='screen',
-             node_name='vmap_main', parameters=[{
+        Node(package='fiducial_vlam', executable='vmap_main', output='screen',
+             name='vmap_main', parameters=[{
                 'publish_tfs': 1,  # Publish marker /tf
                 'marker_length': 0.1778,  # Marker length
                 'marker_map_load_full_filename': map_path,  # Load a pre-built map from disk
@@ -40,12 +40,12 @@ def generate_launch_description():
 
         # Joystick driver, generates /namespace/joy messages
         # Only controls the first drone
-        Node(package='joy', node_executable='joy_node', output='screen',
-             node_namespace=drones[0]),
+        Node(package='joy', executable='joy_node', output='screen',
+             namespace=drones[0]),
 
         # Joystick controller, generates /namespace/cmd_vel messages
-        Node(package='tello_driver', node_executable='tello_joy_main', output='screen',
-             node_namespace=drones[0]),
+        Node(package='tello_driver', executable='tello_joy_main', output='screen',
+             namespace=drones[0]),
     ]
 
     # Per-drone entities
@@ -55,12 +55,12 @@ def generate_launch_description():
 
         entities.extend([
             # Add a drone to the simulation
-            Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen',
+            Node(package='tello_gazebo', executable='inject_entity.py', output='screen',
                  arguments=[urdf_path, '0', str(idx), '1', '0']),
 
             # Localize this drone against the map
-            Node(package='fiducial_vlam', node_executable='vloc_main', output='screen',
-                 node_name='vloc_main', node_namespace=namespace, parameters=[{
+            Node(package='fiducial_vlam', executable='vloc_main', output='screen',
+                 name='vloc_main', namespace=namespace, parameters=[{
                     'publish_tfs': 1,
                     'base_frame_id': 'base_link' + suffix,
                     't_camera_base_z': -0.035,

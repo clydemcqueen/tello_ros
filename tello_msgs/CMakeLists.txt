@@ -6,14 +6,6 @@ if (NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif ()
 
-# Emulate colcon in CLion
-if ($ENV{CLION_IDE})
-  message("Running inside CLion")
-  find_package(fastrtps_cmake_module REQUIRED)
-  set(FastRTPS_INCLUDE_DIR "/opt/ros/eloquent/include")
-  set(FastRTPS_LIBRARY_RELEASE "/opt/ros/eloquent/lib/libfastrtps.so")
-endif ()
-
 # Debugging: set _dump_all_variables to true
 set(_dump_all_variables false)
 if (_dump_all_variables)

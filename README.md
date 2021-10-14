@@ -93,15 +93,15 @@ sudo apt install libasio-dev
 
 ### 2. Set up your ROS environment
 
-[Install ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/) with the `ros-eloquent-desktop` option.
+[Install ROS2 Foxy](https://docs.ros.org/) with the `ros-foxy-desktop` option.
 
 If you install binaries, be sure to also install the 
-[development tools and ROS tools](https://github.com/ros2/ros2/wiki/Linux-Development-Setup#install-development-tools-and-ros-tools)
+[development tools and ROS tools](https://docs.ros.org/en/foxy/Installation/Ubuntu-Development-Setup.html)
 from the source installation instructions.
 
 Install these additional packages:
 ~~~
-sudo apt install ros-eloquent-cv-bridge ros-eloquent-camera-calibration-parsers
+sudo apt install ros-foxy-cv-bridge ros-foxy-camera-calibration-parsers
 ~~~
 
 ### 3. Install `tello_ros`
@@ -113,7 +113,7 @@ cd ~/tello_ros_ws/src
 git clone https://github.com/clydemcqueen/tello_ros.git
 git clone https://github.com/ptrmu/ros2_shared.git
 cd ..
-source /opt/ros/eloquent/setup.bash
+source /opt/ros/foxy/setup.bash
 # If you didn't intall Gazebo, skip tello_gazebo while building:
 colcon build --event-handlers console_direct+ --packages-skip tello_gazebo
 ~~~
@@ -156,27 +156,14 @@ ros2 topic pub /cmd_vel geometry_msgs/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, 
 
 `tello_ros` was developed along with several other projects while ROS2 was rapidly changing.
 All of the related projects adopted similar conventions around branch names:
-* the `master` branch works with the latest ROS2 release (Eloquent as of this writing)
-* there may be branches for older ROS2 versions, such as `crystal` or `dashing`
+* the `master` branch works with the latest ROS2 release (Foxy as of this writing)
+* there may be branches for older ROS2 versions, such as `crystal`, `dashing` or `eloquent`
 
 The following projects and branches were tested together:
 
-* ROS Dashing:
+* ROS2 Foxy with fiducial_vlam:
   * git clone https://github.com/ptrmu/ros2_shared.git
   * git clone https://github.com/ptrmu/fiducial_vlam.git
-  * git clone https://github.com/clydemcqueen/tello_ros.git -b dashing
-  * git clone https://github.com/clydemcqueen/flock2.git -b dashing
-
-* ROS2 Eloquent with fiducial_vlam:
-  * git clone https://github.com/ptrmu/ros2_shared.git
-  * git clone https://github.com/ptrmu/fiducial_vlam.git
-  * git clone https://github.com/clydemcqueen/tello_ros.git
-  * git clone https://github.com/clydemcqueen/flock2.git
-
-* ROS2 Eloquent with fiducial_vlam_sam:
-  * git clone https://github.com/ptrmu/ros2_shared.git
-  * git clone https://github.com/ptrmu/fiducial_vlam_sam.git
-  * git clone https://github.com/clydemcqueen/sim_fiducial.git
   * git clone https://github.com/clydemcqueen/tello_ros.git
   * git clone https://github.com/clydemcqueen/flock2.git
 

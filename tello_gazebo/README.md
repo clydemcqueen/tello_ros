@@ -7,21 +7,19 @@
 * `inject_entity.py` is a script that will read an URDF (ROS) or SDF (Gazebo) file and spawn a model in a running instance of Gazebo
 * the built-in camera plugin is used to emulate the Gazebo forward-facing camera
 
-As of this writing ROS2 Eloquent + Gazebo v9 integration is still developing. YMMV.
-
 #### Python
 
 Add transformations.py v2018.9.5 to your Python environment.
 
 #### Install Gazebo v9
 
-    sudo apt install gazebo9 libgazebo9 libgazebo9-dev
+    sudo apt install gazebo11 libgazebo11 libgazebo11-dev
     
 Run `gazebo` on the command line, fix any problems before continuing.
 
 #### Additional ROS packages
 
-    sudo apt install ros-eloquent-gazebo-ros-pkgs ros-eloquent-cv-bridge
+    sudo apt install ros-foxy-gazebo-ros-pkgs ros-foxy-cv-bridge
 
 #### Run a teleop simulation
 

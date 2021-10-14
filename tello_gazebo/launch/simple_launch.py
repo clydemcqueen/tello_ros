@@ -24,18 +24,18 @@ def generate_launch_description():
         ], output='screen'),
 
         # Spawn tello.urdf
-        Node(package='tello_gazebo', node_executable='inject_entity.py', output='screen',
+        Node(package='tello_gazebo', executable='inject_entity.py', output='screen',
              arguments=[urdf_path, '0', '0', '1', '0']),
 
         # Publish static transforms
-        Node(package='robot_state_publisher', node_executable='robot_state_publisher', output='screen',
+        Node(package='robot_state_publisher', executable='robot_state_publisher', output='screen',
              arguments=[urdf_path]),
 
         # Joystick driver, generates /namespace/joy messages
-        Node(package='joy', node_executable='joy_node', output='screen',
-             node_namespace=ns),
+        Node(package='joy', executable='joy_node', output='screen',
+             namespace=ns),
 
         # Joystick controller, generates /namespace/cmd_vel messages
-        Node(package='tello_driver', node_executable='tello_joy_main', output='screen',
-             node_namespace=ns),
+        Node(package='tello_driver', executable='tello_joy_main', output='screen',
+             namespace=ns),
     ])

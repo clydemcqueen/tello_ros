@@ -24,6 +24,8 @@
     <depend>std_msgs</depend>
     <depend>tello_msgs</depend>
 
+    <exec_depend>gazebo_ros_pkgs</exec_depend>
+
     <export>
         <build_type>ament_cmake</build_type>
         <gazebo_ros plugin_path="${prefix}/lib" gazebo_media_path="${prefix}"/>

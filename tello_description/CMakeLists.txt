@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 #=============
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/urdf")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/launch")
 
 foreach (INDEX RANGE 0 8)
   if (${INDEX} EQUAL 0)
@@ -40,6 +41,11 @@ endforeach ()
 
 install(
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/urdf"
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/launch"
   DESTINATION share/${PROJECT_NAME}
 )
 

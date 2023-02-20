@@ -7,7 +7,7 @@ def generate_launch_description():
 
     # Specify the name of the package and the urdf file
     pkg_name = 'tello_description'
-    urdf_file_name = 'tello.xml'
+    urdf_file_name = 'urdf/tello.urdf'
 
     # Use infp to process the file
     urdf = os.path.join(

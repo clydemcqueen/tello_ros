@@ -7,6 +7,7 @@ authors:
 authors:
 - family-names: "Mullen"
   given-names: "Peter"
+  orcid: "https://orcid.org/0009-0000-7266-8913"
 title: "Tello ROS"
 version: 0.1.0
 date-released: 2019-1-19

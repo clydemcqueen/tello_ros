@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "McQueen"
+  given-names: "Clyde"
+  orcid: "https://orcid.org/0009-0007-9179-318X"
+authors:
+- family-names: "Mullen"
+  given-names: "Peter"
+  orcid: "https://orcid.org/0009-0000-7266-8913"
+title: "Tello ROS"
+version: 0.1.0
+date-released: 2019-1-19
+url: "https://github.com/clydemcqueen/tello_ros"

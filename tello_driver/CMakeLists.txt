@@ -70,6 +70,7 @@ set(DRIVER_NODE_DEPS
   class_loader
   cv_bridge
   geometry_msgs
+  rclcpp_components
   OpenCV
   rclcpp
   ros2_shared
@@ -127,7 +128,8 @@ set(JOY_NODE_DEPS
   geometry_msgs
   rclcpp
   sensor_msgs
-  tello_msgs)
+  tello_msgs
+  rclcpp_components)
 
 add_library(tello_joy_node SHARED
   ${JOY_NODE_SOURCES})

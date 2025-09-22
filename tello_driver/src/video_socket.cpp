@@ -75,12 +75,12 @@ namespace tello_driver
     try {
       while (next < seq_buffer_next_) {
         // Parse h264
-        ssize_t consumed = decoder_.parse(seq_buffer_.data() + next, seq_buffer_next_ - next);
+        auto result = decoder_.parse(seq_buffer_.data() + next, seq_buffer_next_ - next);
 
         // Is a frame available?
-        if (decoder_.is_frame_available()) {
+        if (result.frame) {
           // Decode the frame
-          const AVFrame &frame = decoder_.decode_frame();
+          const AVFrame &frame = *result.frame;
 
           // Convert pixels from YUV420P to BGR24
           int size = converter_.predict_size(frame.width, frame.height);
@@ -113,7 +113,7 @@ namespace tello_driver
           }
         }
 
-        next += consumed;
+        next += result.num_bytes_consumed;
       }
     }
     catch (std::runtime_error e) {
